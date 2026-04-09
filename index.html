@@ -1,0 +1,1803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energi Terbarukan - Media Interaktif Fisika</title>
+    <style>
+        /* RESET & LETTERBOX SETUP */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, Helvetica, sans-serif; }
+        
+        body, html { width: 100vw; height: 100vh; overflow: hidden; background-color: #111; display: flex; align-items: center; justify-content: center; }
+
+        .app-container {
+            width: 100vw; height: 56.25vw; max-height: 100vh; max-width: 177.78vh; 
+            background-image: url('assets/bg.jpg'); background-size: cover; background-position: center bottom; background-repeat: no-repeat;
+            position: relative; color: #333; overflow: hidden; container-type: size; box-shadow: 0 0 3cqh rgba(0,0,0,0.8); 
+        }
+        .app-container::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.8) 100%); z-index: 0; pointer-events: none;
+        }
+
+        @keyframes shake { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 10%, 30%, 50%, 70%, 90% { transform: translate(-.4cqw, -.4cqh) rotate(-1deg); } 20%, 40%, 60%, 80% { transform: translate(.4cqw, .4cqh) rotate(1deg); } }
+        .shake-effect { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+
+        /* Page Control */
+        /* Pastikan container page adalah flexbox yang menengahkan isi */
+/* 1. Kembalikan standar page (halaman umum tetap center) */
+.page { 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    padding: 3cqh 5cqw; 
+    display: none; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+    animation: fadeIn 0.4s ease-in-out; 
+    z-index: 1; 
+}
+
+/* 2. KHUSUS untuk Tujuan & Materi (page-has-char), kembalikan ke layout awal */
+.page-has-char { 
+    align-items: flex-end !important; /* Dorong konten ke kanan */
+    padding-right: 4cqw !important; 
+}
+
+.page-has-char > .content-center, 
+.page-has-char > .page-title, 
+.page-has-char > .content-box,
+.page-has-char > .nav-bar { 
+    width: 68cqw !important; 
+    max-width: 68cqw !important; 
+}
+
+/* Khusus untuk halaman yang ada karakter, kita netralkan marginnya */
+.page-has-char .content-center {
+    width: 100%;
+    max-width: 80cqw;
+    margin: 0 auto; /* Pastikan dia di tengah, bukan minggir ke kanan */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+        .page.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+
+        /* General UI Elements */
+        .content-center { text-align: center; color: #fff; width: 100%; max-width: 80cqw; margin-top: -3cqh;}
+        .title-anim { font-size: 6cqh; margin-bottom: 2cqh; line-height: 1.2; text-shadow: 0 .4cqh 1cqh rgba(0,0,0,0.8), 0 .1cqh .2cqh rgba(0,0,0,1);}
+        .title-anim span { color: #ffdd59; text-transform: uppercase; font-size: 8cqh; }
+        .page-title { text-align: center; color: #fff; font-size: 4.5cqh; margin-bottom: 2cqh; text-shadow: 0 .3cqh .8cqh rgba(0,0,0,0.8); font-weight: 800;}
+        
+        .input-name { padding: 1.5cqh 2cqw; font-size: 2.5cqh; border-radius: 1.5cqh; border: none; outline: none; margin-bottom: 2cqh; text-align: center; width: 50cqw; max-width: 40cqw; background: rgba(255,255,255,0.9); font-weight: bold; box-shadow: inset 0 .3cqh .5cqh rgba(0,0,0,0.2), 0 .5cqh 1cqh rgba(0,0,0,0.4); }
+        .input-name:focus { background: #fff; box-shadow: inset 0 .3cqh .5cqh rgba(0,0,0,0.1), 0 0 1cqh #ffdd59; }
+
+        /* Pemilihan Karakter */
+        .avatar-container { display: flex; justify-content: center; gap: 4cqw; margin-bottom: 3cqh; }
+        .avatar-btn { display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.2s; }
+        .avatar-btn img { width: 10cqh; height: 10cqh; border-radius: 50%; object-fit: cover; border: .4cqh solid rgba(255,255,255,0.5); box-shadow: 0 .5cqh 1cqh rgba(0,0,0,0.5); transition: 0.2s; background: rgba(255,255,255,0.8); }
+        .avatar-btn p { margin-top: 1cqh; font-size: 2cqh; font-weight: 800; color: #fff; text-shadow: 0 .2cqh .4cqh rgba(0,0,0,0.8); transition: 0.2s;}
+        .avatar-btn:hover img { transform: scale(1.1); border-color: #ffdd59; }
+        .avatar-btn.selected img { transform: scale(1.15); border-color: #05c46b; box-shadow: 0 0 2cqh #05c46b; }
+        .avatar-btn.selected p { color: #0be881; text-shadow: 0 0 1cqh #000; transform: scale(1.1);}
+        .avatar-selection-img { width: 18cqh !important; height: 18cqh !important; border-width: .6cqh !important; }
+
+        /* HUD Profil & Timer */
+        .profile-hud { position: absolute; top: 3cqh; right: 3cqw; display: none; align-items: center; gap: 1cqw; background: rgba(255, 255, 255, 0.9); padding: .5cqh 1.5cqw .5cqh .5cqh; border-radius: 5cqh; box-shadow: 0 .5cqh 1cqh rgba(0,0,0,0.4); border: .2cqh solid #fff; z-index: 100; backdrop-filter: blur(5px); }
+        .profile-hud img { width: 5cqh; height: 5cqh; border-radius: 50%; object-fit: cover; border: .2cqh solid #3c40c6; background: #ecf0f1;}
+        .profile-hud span { font-size: 2cqh; font-weight: 800; color: #3c40c6; }
+        .hud-container { position: absolute; top: 3cqh; left: 3cqw; display: flex; gap: 1cqw; z-index: 100; }
+        .hud-box { background: rgba(255, 221, 89, 0.9); color: #333; padding: 1cqh 2cqw; font-size: 2.5cqh; font-weight: 800; border-radius: 5cqh; backdrop-filter: blur(5px); box-shadow: 0 .5cqh 1cqh rgba(0,0,0,0.4); border: .2cqh solid #fff; display: none; transition: 0.2s; }
+        #global-score-hud { display: block; } /* Selalu tampilkan skor */
+
+        /* Karakter Besar di Sisi Kiri */
+        #global-character-container { position: absolute; bottom: 0; left: 2cqw; width: 38cqw; height: 85cqh; z-index: 2; display: none; align-items: flex-end; justify-content: flex-start; pointer-events: none; }
+        #global-character-img { width: 100%; height: 100%; object-fit: contain; object-position: bottom left; filter: drop-shadow(0 1.5cqh 3cqh rgba(0,0,0,0.8)); transition: opacity 0.5s ease-in-out; }
+
+        /* Layout Khusus Karakter */
+        .page-has-char { align-items: flex-end !important; padding-right: 4cqw !important; }
+        .page-has-char > .content-center, .page-has-char > .page-title, .page-has-char > .content-box,
+        .page-has-char > .nav-bar, .page-has-char > .certificate-wrapper { width: 68cqw !important; max-width: 68cqw !important; }
+        .page-has-char .level-btn { max-width: 100% !important; }
+
+        /* NAVIGASI */
+        .nav-bar { width: 100%; max-width: 90cqw; display: flex; justify-content: space-between; margin-top: 2cqh; gap: 2cqw; align-items: center;}
+        .img-nav-btn { height: 10cqh!important; width: auto; object-fit: contain; cursor: pointer; border-radius: 1.5cqh; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .img-nav-btn:hover { transform: translateY(-0.8cqh) scale(1.08); filter: drop-shadow(0 1cqh 1.5cqh rgba(255,255,255,0.5)); }
+        .img-nav-btn:active { transform: translateY(0) scale(0.95); filter: drop-shadow(0 0 0 transparent); }
+        #global-sound-btn { position: absolute; bottom: 3cqh; left: 3cqw; z-index: 1000; height: 8cqh; border-radius: 50%; }
+
+        /* DESAIN MENU ICON */
+        .menu-grid { 
+    display: flex; 
+    flex-wrap: wrap; 
+    justify-content: center; 
+    align-items: center;
+    gap: 1.5cqw; /* Jarak antar kotak menu diperkecil sedikit */
+    width: 100%; 
+    max-width: 75cqw; /* Diperkecil dari 90 ke 75 agar lebih ke tengah */
+    margin: 0 auto; 
+}
+        .menu-item { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: flex-start; 
+    background: transparent; 
+    border: none; 
+    cursor: pointer; 
+    width: 16cqw; /* Diperkecil dari 18-20 menjadi 16 */
+    transition: transform 0.3s ease;
+}
+        .menu-item:hover { transform: translateY(-1cqh) scale(1.05); }
+        .menu-item img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 3cqh; margin-bottom: 1cqh; transition: box-shadow 0.3s ease;}
+        .menu-item:hover img { box-shadow: 0 1cqh 2cqh rgba(255, 221, 89, 0.6); }
+        .menu-item h3 { 
+    font-size: 2.8cqh; /* Diperkecil agar tidak terlalu mendominasi */
+    color: #fff; 
+    margin-top: 1cqh; 
+    font-weight: 900; 
+    text-align: center; 
+    text-shadow: 0 0.4cqh 1cqh rgba(0,0,0,1); 
+    transition: color 0.3s ease; 
+    letter-spacing: 1px;
+}
+        .menu-item:hover h3 { color: #ffdd59; }
+
+        /* Content Box Umum */
+        .content-box { background: rgba(20, 20, 20, 0.9); padding: 4cqh 5cqw; border-radius: 2.5cqh; width: 100%; height: 75cqh; display: flex; flex-direction: column; justify-content: flex-start; box-shadow: 0 2cqh 4cqh rgba(0,0,0,0.6); overflow-y: auto; overflow-x: hidden; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.3); }
+        .content-box h3 { color: #ffdd59; border-bottom: .3cqh solid #f39c12; display: inline-block; padding-bottom: .8cqh; margin-bottom: 1.5cqh; font-size: 3cqh;}
+        .content-box p, .content-box li { font-size: 2.3cqh; line-height: 1.6; margin-bottom: 1.5cqh; color: #f1f2f6; font-weight: 500;}
+        .content-box ul, .content-box ol { margin-left: 3cqw; margin-bottom: 2cqh;}
+        .img-logo { height: 18cqh; margin-bottom: 2cqh; object-fit: contain; filter: drop-shadow(0 1cqh 1cqh rgba(0,0,0,0.4)); }
+
+        /* GAMES UI */
+        /* ==================== DESAIN MENU EVALUASI LOGO 3D ==================== */
+
+/* Container Utama untuk menjajarkan logo secara horizontal */
+/* ==================== PERBAIKAN UKURAN LOGO EVALUASI 3D ==================== */
+
+/* Container Utama: Kita buat jarak antar logo lebih rapat agar ukuran logo bisa maksimal */
+.logo-level-container {
+    display: flex;
+    justify-content: center; /* Menengahkan jejeran logo */
+    align-items: flex-start; /* Sejajar dari atas */
+    gap: 2cqw; /* Jarak antar logo diperkecil agar logo bisa lebih besar */
+    width: 100%;
+    max-width: 98cqw; /* Memenuhi hampir seluruh lebar kotak */
+    margin: 1cqh auto; /* Margin atas-bawah diperkecil */
+    padding: 0; /* Pastikan tidak ada padding tambahan */
+}
+
+/* Item individual (Logo + Badge) */
+.logo-level-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, filter 0.2s ease;
+    
+    /* INI KUNCINYA: Perbesar area klik per logo */
+    width: 28cqw; /* Diperbesar dari 20cqw menjadi 28cqw */
+    position: relative;
+    padding-bottom: 2cqh; /* Jarak aman di bawah */
+}
+
+/* Gambar Logo */
+.img-level-logo {
+    width: 100%; /* Memenuhi area logo-level-item */
+    height: auto;
+    object-fit: contain;
+    /* Efek bayangan 3D di bawah logo (Disesuaikan agar pas) */
+    filter: drop-shadow(0 0.8cqh 0.8cqh rgba(0,0,0,0.5));
+    transition: filter 0.2s ease;
+}
+
+/* Efek Hover (Tetap keren) */
+.logo-level-item:hover {
+    transform: translateY(-1.2cqh) scale(1.03);
+}
+
+.logo-level-item:hover .img-level-logo {
+    filter: drop-shadow(0 1.2cqh 1.5cqh rgba(255, 221, 89, 0.6));
+}
+
+/* Efek Klik (Disesuaikan agar pas) */
+.logo-level-item:active {
+    transform: translateY(0.3cqh) scale(0.99);
+}
+
+.logo-level-item:active .img-level-logo {
+    filter: drop-shadow(0 0.3cqh 0.4cqh rgba(0,0,0,0.3));
+}
+/* Efek Hover: Menarik logo ke atas dan glow kuning */
+.logo-level-item:hover {
+    transform: translateY(-1.5cqh) scale(1.05);
+}
+
+.logo-level-item:hover .img-level-logo {
+    filter: drop-shadow(0 1.5cqh 2cqh rgba(255, 221, 89, 0.6));
+}
+
+/* Efek Klik (Active): Logo menekan ke bawah */
+.logo-level-item:active {
+    transform: translateY(0.5cqh) scale(0.98);
+}
+
+.logo-level-item:active .img-level-logo {
+    filter: drop-shadow(0 0.5cqh 0.5cqh rgba(0,0,0,0.3));
+}
+
+/* Badge Skor di bawah Logo */
+/* Badge Skor di bawah Logo (Disesuaikan) */
+.status-badge-3d {
+    margin-top: -1cqh; /* Tetap menimpa sedikit logo */
+    
+    /* INI KUNCINYA: Sesuaikan ukuran teks badge agar serasi */
+    font-size: 2.2cqh; /* Diperbesar sedikit dari 2.0cqh */
+    
+    font-weight: 900;
+    color: white;
+    background: linear-gradient(145deg, #333, #111);
+    padding: 0.8cqh 3cqw; /* Padding horizontal diperlebar sedikit */
+    border-radius: 5cqh;
+    box-shadow: 0 0.5cqh 0 #000, 0 0.8cqh 1cqh rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    text-shadow: 0 0.2cqh 0.3cqh rgba(0,0,0,0.5);
+    z-index: 2;
+    white-space: nowrap; /* Teks pts tidak turun ke bawah */
+}
+
+/* Warna Pts saat Selesai (Hijau) */
+/* (Pastikan ini sesuai dengan logika updateMenuStatus() di JS kamu) */
+#s-lvl1, #s-lvl2, #s-lvl3 {
+    /* Nanti di JS, jika selesai, ganti class jadi 'selesai' atau warna langsung */
+}
+        .match-container { display: flex; justify-content: space-between; height: 100%; gap: 2cqw;}
+        .match-column { display: flex; flex-direction: column; justify-content: space-around; width: 48%; }
+        .match-item { background: rgba(210, 218, 226, 0.9); padding: 1.5cqh 1cqw; border-radius: 1.2cqh; text-align: center; box-shadow: 0 .4cqh 0 #a4b0be; font-weight: bold; cursor: pointer; transition: 0.1s; border: .2cqh solid transparent; font-size: 2.2cqh; color: #111; }
+        .match-item:active { transform: translateY(.4cqh); box-shadow: 0 0 0 #a4b0be; }
+        .match-item.selected { border-color: #3c40c6; background: #fff2cc; transform: scale(1.02); }
+        .match-item.matched { background: #05c46b; color: white; cursor: default; opacity: 0.7; box-shadow: none; transform: none;}
+        .passage-box { background: rgba(241, 242, 246, 0.95); padding: 2cqh 2cqw; border-left: .8cqw solid #ffa801; border-radius: 1cqh; font-style: italic; font-size: 2.2cqh; margin-bottom: 2cqh; font-weight: 600; color: #111;}
+        .question-box { background: white; padding: 3cqh; border-radius: 1.5cqh; box-shadow: inset 0 .3cqh .5cqh rgba(0,0,0,0.1); text-align: center; font-size: 2.8cqh; font-weight: 800; color: #1e272e; margin-bottom: 2cqh;}
+        .options-container { display: flex; flex-direction: column; gap: 1.5cqh; }
+        .option-btn { background: #3c40c6; color: white; padding: 2cqh 2cqw; border-radius: 1cqh; font-size: 2.2cqh; transition: 0.2s; text-align: left; box-shadow: 0 .4cqh 0 #1e2068; cursor:pointer; border:none;}
+        .option-btn:active { transform: translateY(.4cqh); box-shadow: 0 0 0 #1e2068; }
+        .tf-container { display: flex; justify-content: center; gap: 3cqw; align-items: center; padding: 2cqh 0;}
+        .tf-btn { width: 45%; max-width: 25cqw; padding: 3cqh; font-size: 2.8cqh; font-weight: 800; border-radius: 1.5cqh; color: white; text-shadow: 0 .2cqh .2cqh rgba(0,0,0,0.3); border:none; cursor:pointer; transition:0.1s;}
+        .btn-true { background: #05c46b; box-shadow: 0 .6cqh 0 #049551; } .btn-true:active { transform: translateY(.6cqh); box-shadow: 0 0 0 #049551; }
+        .btn-false { background: #ff3f34; box-shadow: 0 .6cqh 0 #c92f25; } .btn-false:active { transform: translateY(.6cqh); box-shadow: 0 0 0 #c92f25; }
+        .score-screen { text-align: center; margin: auto; }
+        .score-text { font-size: 15cqh; color: #ff3f34; font-weight: 800; text-shadow: 0 .5cqh 1cqh rgba(0,0,0,0.2);}
+
+        /* SIMULATOR UI UTAMA */
+        .sim-container { display: flex; flex-direction: column; gap: 2cqh; height: 100%; width: 100%; }
+        .sim-controls { display: flex; flex-direction: row; justify-content: center; gap: 2cqw; width: 100%; z-index: 100;}
+        .sim-btn { flex: 1; padding: 1cqh 2cqw; font-size: 2cqh; font-weight: bold; border-radius: 1cqh; background: rgba(210, 218, 226, 0.9); color: #1e272e; box-shadow: 0 .4cqh 0 #a4b0be; cursor:pointer; border:none; transition:0.2s; }
+        .sim-btn:active { transform: translateY(.4cqh); box-shadow: 0 0 0 #a4b0be; }
+        .sim-btn.active { background: #3c40c6; color: white; box-shadow: 0 .4cqh 0 #1e2068; transform: scale(1.02); }
+        .sim-display { display: flex; flex-direction: row; gap: 2cqw; width: 100%; flex-grow: 1; height: 100%; min-height: 0; }
+        .sim-visual { flex-grow: 1; width: 75%; height: 100%; background: rgba(15, 23, 42, 0.9); border-radius: 1.5cqh; position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; border: .3cqh solid rgba(255,255,255,0.2); box-shadow: inset 0 .5cqh 2cqh rgba(0,0,0,0.5); }
+        .sim-text { width: 25%; height: 100%; background: rgba(31, 31, 31, 0.95); padding: 3cqh 2cqw; border-radius: 1.5cqh; border-left: .8cqw solid #0fb9b1; box-shadow: 0 .4cqh 1cqh rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow-y: auto; }
+
+        /* CERTIFICATE UI */
+        .certificate-wrapper { background: white; padding: 1.5cqh; border-radius: 1.5cqh; margin: 0 auto; box-shadow: 0 1cqh 3cqh rgba(0,0,0,0.5); }
+        .certificate-inner { border: 1cqh double #bdc3c7; padding: 4cqh 4cqw; text-align: center; background: linear-gradient(to bottom, #ffffff, #fdfbfb); }
+        .cert-header { font-family: 'Playfair Display', 'Segoe UI', serif; font-size: 4cqh; color: #2c3e50; font-weight: 800;}
+        .cert-name { font-family: 'Playfair Display', 'Segoe UI', serif; font-size: 6cqh; color: #c0392b; margin: 2cqh 0; font-style: italic; border-bottom: .4cqh solid #c0392b; display: inline-block; padding: 0 3cqw;}
+        .cert-score-box { background: #f1f2f6; display: inline-block; padding: 2cqh 4cqw; border-radius: 1.5cqh; border: .3cqh dashed #bdc3c7; margin-top: 1cqh;}
+        .cert-score-number { font-size: 8cqh; font-weight: 800; color: #27ae60; line-height: 1;}
+
+        /* ==================== CUSTOM CSS UNTUK 4 SIMULASI ==================== */
+
+        /* 1. SIMULATOR SURYA (V2 PREMIUM DESIGN) */
+        .solar-bg { position: absolute; inset: 0; background: #e0f2fe; overflow: hidden; }
+        .solar-clouds-bg { position: absolute; inset: 0; background: linear-gradient(180deg, #38bdf8 0%, #bae6fd 50%, #ffffff 100%); }
+        .solar-hud-header { position: absolute; top: 0; left: 0; right: 0; height: 12%; padding: 0 3%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(226,232,240,0.8); background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); z-index: 50; }
+        .solar-hud-title { font-size: 2cqh; font-weight: 900; letter-spacing: 2px; color: #0f172a; text-transform: uppercase; font-style: italic; line-height: 1; }
+        .solar-main-content { position: absolute; top: 12%; bottom: 0; left: 0; right: 0; display: flex; }
+        .solar-visual-area { flex: 2.4; position: relative; padding: 2%; display: flex; align-items: center; justify-content: center; }
+        .solar-svg-box { position: relative; width: 100%; height: 100%; border-radius: 2cqh; border: 1px solid rgba(255,255,255,0.4); background: rgba(15,23,42,0.45); backdrop-filter: blur(8px); box-shadow: 0 10px 30px rgba(0,0,0,0.25); overflow: hidden; display: flex; align-items: center; justify-content: center; transition: all 0.4s; }
+        .solar-sidebar { flex: 1; background: rgba(255,255,255,0.7); backdrop-filter: blur(20px); border-left: 1px solid #e2e8f0; display: flex; flex-direction: column; padding: 2.5%; overflow: hidden; }
+        .solar-step-tracker { display: flex; gap: -0.5vw; }
+        .solar-step-circle { width: 2.5cqw; height: 2.5cqw; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 1.2cqh; font-weight: 900; transition: all 0.5s; background: #e2e8f0; color: #94a3b8; margin-left: -0.5vw;}
+        .solar-step-circle.active { background: #0f172a; color: white; transform: scale(1.1); z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .solar-data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1cqw; margin-top: 1.5cqh; }
+        .solar-data-box { background: rgba(255,255,255,0.5); border: 1px solid white; padding: 1cqw; rounded: 1.5cqh; border-radius: 1.5cqh; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .solar-btn { width: 100%; padding: 1.2cqh; border-radius: 2cqh; font-weight: 900; font-size: 1.6cqh; text-transform: uppercase; letter-spacing: 1px; color: white; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; transition: all 0.3s; margin-top: auto;}
+        .solar-btn:active { transform: scale(0.95); }
+        .solar-slider-float { position: absolute; bottom: 6%; right: 6%; background: rgba(255,255,255,0.1); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); padding: 1.5cqh 1.5cqw; border-radius: 2cqh; width: 18cqw; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .solar-custom-slider { -webkit-appearance: none; width: 100%; height: .6cqh; background: rgba(255,255,255,0.2); border-radius: .3cqh; outline: none; }
+        .solar-custom-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 2cqh; height: 2cqh; border-radius: 50%; background: #fbbf24; cursor: pointer; box-shadow: 0 0 10px #f59e0b; border: 2px solid white;}
+
+        /* 3. SIMULATOR GEOTHERMAL (PREMIUM OVERLAY) */
+        .geo-bg { position: absolute; inset: 0; background: #0a0f18; overflow: hidden; display: flex; flex-direction: column; }
+        .geo-svg-wrapper { flex-grow: 1; position: relative; border-radius: 1cqh; overflow: hidden; display: flex; justify-content: center; align-items: flex-end;}
+        .geo-hud-header { position: absolute; top: 3cqh; left: 50%; transform: translateX(-50%); background: rgba(15,23,42,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(51,65,85,0.5); padding: 1cqh 3cqw; border-radius: 3cqh; box-shadow: 0 4px 30px rgba(0,0,0,0.5); z-index: 50; }
+        .geo-hud-title { font-size: 2.2cqh; font-weight: 900; color: transparent; background-clip: text; -webkit-background-clip: text; background-image: linear-gradient(to right, #22d3ee, #3b82f6); letter-spacing: 1px; text-transform: uppercase; }
+        .geo-info-panel { 
+    position: absolute; 
+    top: 5cqh !important; /* Gunakan 1cqh agar sangat mepet ke atas */
+    right: 5cqw; 
+    /* Sisanya biarkan tetap sama */ 
+    background: rgba(15,23,42,0.7); 
+    backdrop-filter: blur(10px); 
+    border: 1px solid rgba(51,65,85,0.5); 
+    border-radius: 1.5cqh; 
+    padding: 1.5cqh; 
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
+    z-index: 50; 
+}
+        .geo-bottom-panel { position: absolute; bottom: 3cqh; left: 2cqw; right: 2cqw; background: rgba(15,23,42,0.7); backdrop-filter: blur(15px); border: 1px solid rgba(51,65,85,0.5); border-radius: 2cqh; padding: 1.5cqh 2cqw; display: flex; gap: 2cqw; box-shadow: 0 -10px 40px rgba(0,0,0,0.5); align-items: center; z-index: 50; }
+        .geo-control-sec { width: 35%; display: flex; flex-direction: column; gap: 1cqh; border-right: 1px solid rgba(51,65,85,0.5); padding-right: 2cqw; }
+        .geo-stats-sec { width: 65%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1cqw; }
+        .geo-stat-box { background: rgba(2,6,23,0.5); padding: 1cqh; border-radius: 1cqh; border: 1px solid #1e293b; position: relative; }
+        .geo-stat-label { font-size: .9cqh; color: #64748b; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; margin-bottom: .5cqh; }
+        .geo-stat-val { font-size: 3cqh; font-family: monospace; font-weight: 300; }
+        .geo-valve-btn { width: 100%; padding: 1cqh; border-radius: 1cqh; font-weight: bold; font-size: 1.2cqh; letter-spacing: 1px; text-transform: uppercase; transition: all 0.3s; border: 1px solid transparent; cursor: pointer; }
+        .geo-valve-closed { background: rgba(16,185,129,0.2); color: #34d399; border-color: rgba(16,185,129,0.5); }
+        .geo-valve-closed:hover { background: rgba(16,185,129,0.3); }
+        .geo-valve-open { background: rgba(244,63,94,0.2); color: #fb7185; border-color: rgba(244,63,94,0.5); box-shadow: 0 0 15px rgba(244,63,94,0.3); }
+        .geo-valve-open:hover { background: rgba(244,63,94,0.3); }
+        .geo-slider { -webkit-appearance: none; width: 100%; height: .4cqh; background: #334155; border-radius: .2cqh; outline: none; }
+        .geo-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 2cqh; height: 2cqh; border-radius: 50%; background: #f97316; cursor: pointer; box-shadow: 0 0 10px #f97316, 0 0 20px #f97316; margin-top: -.8cqh; }
+        
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes flowGeo { to { stroke-dashoffset: -40; } }
+        @keyframes floatCloudGeo { 0% { transform: translateY(0) scale(1); opacity: 0.4; } 100% { transform: translateY(-40px) scale(1.5); opacity: 0; } }
+        @keyframes pulseGlowGeo { 0% { filter: drop-shadow(0 0 10px var(--magma-color)); } 50% { filter: drop-shadow(0 0 30px var(--magma-color)); } 100% { filter: drop-shadow(0 0 10px var(--magma-color)); } }
+        .animate-spin-geo { animation: spin var(--spin-speed) linear infinite; transform-origin: center; }
+        .animate-flow-geo { animation: flowGeo var(--flow-speed) linear infinite; }
+        .animate-cloud-geo1 { animation: floatCloudGeo 3s ease-in infinite; }
+        .animate-cloud-geo2 { animation: floatCloudGeo 4s ease-in infinite; animation-delay: 1s; }
+        .animate-cloud-geo3 { animation: floatCloudGeo 3.5s ease-in infinite; animation-delay: 2s; }
+        .magma-glow-geo { animation: pulseGlowGeo 3s ease-in-out infinite; }
+
+        /* 4. SIMULATOR PLTA (AIR) - PROFESSIONAL DESIGN */
+        .hydro-bg { position: absolute; inset: 0; background-color: #0f172a; display: flex; flex-direction: row; overflow: hidden; font-family: 'Segoe UI', monospace; }
+        .hydro-dash { width: 30%; height: 100%; background: linear-gradient(180deg, #0f172a 0%, #020617 100%); border-right: 2px solid #1e293b; padding: 2cqh; display: flex; flex-direction: column; justify-content: space-between; z-index: 10; box-shadow: 10px 0 20px rgba(0,0,0,0.5); }
+        .hydro-dash-header { display: flex; align-items: center; gap: 1cqw; border-bottom: 1px solid rgba(51, 65, 85, 0.5); padding-bottom: 1cqh; margin-bottom: 1.5cqh; }
+        .hydro-pulse { width: 1cqw; height: 1cqw; border-radius: 50%; background: #0ea5e9; box-shadow: 0 0 8px #0ea5e9; animation: pulse 2s infinite; }
+        .hydro-title { font-size: 2cqh; font-weight: bold; color: #f1f5f9; text-transform: uppercase; letter-spacing: 1px; margin-bottom:0;}
+        .hydro-desc { font-size: 1.4cqh; color: #94a3b8; margin-bottom: 2cqh; line-height: 1.4; }
+        
+        .hydro-control-box { background: rgba(30, 41, 59, 0.5); padding: 1.5cqh; border: 1px solid rgba(51, 65, 85, 0.5); margin-bottom: 1.5cqh; border-radius: 1cqh; }
+        .hydro-control-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1cqh; }
+        .hydro-control-label { font-size: 1.4cqh; font-weight: 600; color: #cbd5e1; }
+        .hydro-control-val { font-family: monospace; font-size: 2.2cqh; font-weight: 900; }
+        
+        .hydro-slider { -webkit-appearance: none; width: 100%; background: transparent; }
+        .hydro-slider:focus { outline: none; }
+        .hydro-slider::-webkit-slider-runnable-track { width: 100%; height: .8cqh; cursor: pointer; background: #1e293b; border-radius: 1cqh; border: 1px solid #0f172a; box-shadow: inset 0 1px 3px rgba(0,0,0,0.8); }
+        .hydro-slider::-webkit-slider-thumb { -webkit-appearance: none; height: 3cqh; width: 2cqw; border-radius: .5cqh; background: #0ea5e9; cursor: pointer; margin-top: -1.2cqh; box-shadow: 0 0 10px #0ea5e9, inset 0 0 4px rgba(255,255,255,0.8); border: 1px solid #bae6fd; }
+        
+        .hydro-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1cqh; text-align: center; }
+        .hydro-stat-box { background: rgba(15, 23, 42, 0.8); padding: 1cqh; border-radius: 1cqh; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+        .hydro-stat-label { font-size: 1.2cqh; text-transform: uppercase; letter-spacing: 1px; margin-bottom: .5cqh; }
+        .hydro-stat-val { font-family: monospace; font-size: 2.5cqh; font-weight: 900; }
+        
+        .hydro-canvas-wrap { width: 70%; height: 100%; position: relative; background: #0f172a; }
+        .hydro-canvas { width: 100%; height: 100%; object-fit: contain; }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    </style>
+</head>
+<body>
+    <audio id="audio-click" src="assets/audio/click.mp3" preload="auto"></audio>
+    <audio id="audio-bg" src="assets/audio/bg-music.mp3" loop preload="auto"></audio>
+    <audio id="audio-wrong" src="assets/audio/wrong.mp3" preload="auto"></audio>
+    <audio id="audio-correct" src="assets/audio/correct.mp3" preload="auto"></audio>
+
+    <div class="app-container" id="main-container">
+        <div id="instant-feedback"></div>
+        <div class="hud-container">
+            <div id="global-score-hud" class="hud-box">🏆 Pts: <span id="display-points">0</span></div>
+        <div id="instant-feedback" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; padding: 2cqh 5cqw; border-radius: 2cqh; font-size: 6cqh; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0.5cqh 1cqh rgba(0,0,0,0.5); pointer-events: none; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></div>
+
+<style>
+    @keyframes popIn {
+        0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+        100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+    /* Gaya untuk tulisan Tepat/Tidak Tepat */
+        /* Feedback diletakkan di bawah soal, tetap Center */
+       .feedback-style {
+    display: none;
+    position: absolute;
+    /* Ini untuk menaruh tepat di area kosong bawah jawaban */
+    bottom: 5cqh; 
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    padding: 1.5cqh 4cqw;
+    border-radius: 5cqh;
+    font-size: 4cqh;
+    font-weight: 900;
+    color: white;
+    text-shadow: 0 0.3cqh 0.6cqh rgba(0,0,0,0.5);
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+</style>
+        </div>
+        <div id="profile-container" class="profile-hud"><img id="display-avatar" src="" alt="avatar"><span id="display-username-hud">Siswa</span></div>
+        <img id="global-sound-btn" src="assets/Soundon.png" class="img-nav-btn" onclick="toggleGlobalSound()" title="Toggle Sound" onerror="this.style.display='none'">
+        <div id="global-character-container"><img id="global-character-img" src="" alt="character"></div>
+
+        <section id="page-welcome" class="page active">
+            <div class="content-center">
+                <img src="assets/logo.png" alt="[Logo]" class="img-logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0MCIgZmlsbD0iI2ZmZGQ1OSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjM1ZW0iIGZvbnQtc2l6ZT0iMjAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LWZhbWlseT0iQXJpYWwiIGZpbGw9IiMzMzMiPkxPR088L3RleHQ+PC9zdmc+'">
+                <h1 class="title-anim">Fisika Kelas X<br><span>Energi Terbarukan</span></h1>
+                <p id="welcome-text" style="font-size: 2.2cqh; margin-bottom: 2cqh; font-weight: 600; text-shadow: 0 .2cqh .4cqh rgba(0,0,0,0.8);">Silakan masukkan nama lengkapmu.</p>
+                <input type="text" id="username-input" class="input-name" placeholder="Ketik namamu di sini..." autocomplete="off">
+                <br><img src="assets/start.png" class="img-nav-btn" onmouseenter="playHoverSound()" onclick="goToCharacterSelect()" style="height: 8cqh; margin-top: 1cqh;" alt="Next">
+                <br><button id="btn-reset" onclick="resetSave()" style="margin-top: 3cqh; background: rgba(0,0,0,0.5); color: #fff; padding: 1cqh 2cqw; border-radius: 2cqh; cursor: pointer; display: none; font-size: 1.6cqh; border: 1px solid #fff;">Reset Saved Data</button>
+            </div>
+        </section>
+
+        <section id="page-character" class="page">
+            <div class="content-center">
+                <h2 class="page-title" style="font-size: 5cqh; margin-bottom: 4cqh;">Pilih Karaktermu</h2>
+                <div class="avatar-container" style="gap: 8cqw; margin-bottom: 5cqh;">
+                    <div class="avatar-btn" id="btn-boy" onmouseenter="playHoverSound()" onclick="selectAvatar('boy')"><img src="assets/boy.png" alt="Boy" class="avatar-selection-img" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><circle cx=\'50\' cy=\'50\' r=\'50\' fill=\'%233498db\'/><text x=\'50\' y=\'65\' font-size=\'50\' text-anchor=\'middle\' fill=\'white\'>👦</text></svg>'"><p style="font-size: 2.5cqh; margin-top: 1.5cqh;">Putra</p></div>
+                    <div class="avatar-btn" id="btn-girl" onmouseenter="playHoverSound()" onclick="selectAvatar('girl')"><img src="assets/girl.png" alt="Girl" class="avatar-selection-img" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><circle cx=\'50\' cy=\'50\' r=\'50\' fill=\'%23e74c3c\'/><text x=\'50\' y=\'65\' font-size=\'50\' text-anchor=\'middle\' fill=\'white\'>👧</text></svg>'"><p style="font-size: 2.5cqh; margin-top: 1.5cqh;">Putri</p></div>
+                </div>
+                <img src="assets/start.png" class="img-nav-btn" onmouseenter="playHoverSound()" onclick="loginUser()" style="height: 8cqh;" alt="Enter">
+            </div>
+        </section>
+
+        <section id="page-home" class="page page-has-char">
+            <div class="content-center">
+                <h1 class="title-anim">Selamat Datang,<br><span id="display-username">Siswa</span>!</h1>
+                <p style="font-size: 2.8cqh; margin-bottom: 4cqh; font-weight: 600; text-shadow: 0 .2cqh .4cqh rgba(0,0,0,0.8);">Siap untuk menjelajahi Energi Terbarukan?</p>
+                <img src="assets/start.png" class="img-nav-btn" onmouseenter="playHoverSound()" onclick="playClickSound(); goToPage('page-menu')" style="height: 10cqh;" alt="Menu">
+            </div>
+        </section>
+
+        <section id="page-menu" class="page">
+            <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding-top: 5cqh;">
+                
+                <h2 class="page-title" style="margin-bottom: 2cqh;">Menu Utama</h2>
+                
+                <div class="menu-grid" style="margin: 0 auto;">
+                    <div class="menu-item" onmouseenter="playHoverSound()" onclick="playClickSound(); goToPage('page-objectives')"><img src="assets/objectives.png" alt="Objectives" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100%\' height=\'100%\'><rect width=\'100%\' height=\'100%\' fill=\'%23575fcf\'/></svg>'"><h3>Tujuan</h3></div>
+                    <div class="menu-item" onmouseenter="playHoverSound()" onclick="playClickSound(); goToPage('page-learn')"><img src="assets/material.png" alt="Material" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100%\' height=\'100%\'><rect width=\'100%\' height=\'100%\' fill=\'%233c40c6\'/></svg>'"><h3>Materi</h3></div>
+                    <div class="menu-item" onmouseenter="playHoverSound()" onclick="playClickSound(); goToPage('page-example')"><img src="assets/examples.png" alt="Examples" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100%\' height=\'100%\'><rect width=\'100%\' height=\'100%\' fill=\'%230fb9b1\'/></svg>'"><h3>Contoh</h3></div>
+                    <div class="menu-item" onmouseenter="playHoverSound()" onclick="playClickSound(); goToPage('page-sim')"><img src="assets/simulation.png" alt="Simulation" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100%\' height=\'100%\'><rect width=\'100%\' height=\'100%\' fill=\'%23e15f41\'/></svg>'"><h3>Simulasi</h3></div>
+                    <div class="menu-item" onmouseenter="playHoverSound()" onclick="playClickSound(); goToPage('page-exercise-menu')"><img src="assets/games.png" alt="Games" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/xml\' width=\'100%\' height=\'100%\'><rect width=\'100%\' height=\'100%\' fill=\'%2305c46b\'/></svg>'"><h3>Evaluasi</h3></div>
+                    <div class="menu-item item-karya" onmouseenter="playHoverSound()" onclick="playClickSound(); goToPage('page-karya')">
+    <div class="menu-icon-container">
+        <img src="assets/karyakita.jpg" alt="Karya Kita" class="menu-icon-img">
+    </div>
+    <h3>Karya Kita</h3>
+</div>
+                    <div class="menu-item" onmouseenter="playHoverSound()" onclick="playClickSound(); goToPage('page-guide')"><img src="assets/guide.png" alt="Guide" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100%\' height=\'100%\'><rect width=\'100%\' height=\'100%\' fill=\'%23f39c12\'/></svg>'"><h3>Panduan</h3></div>
+                    <div class="menu-item" onmouseenter="playHoverSound()" onclick="playClickSound(); generateCertificate()"><img src="assets/certificate.png" alt="Certificate" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100%\' height=\'100%\'><rect width=\'100%\' height=\'100%\' fill=\'%23ffb8b8\'/></svg>'"><h3>Sertifikat</h3></div>
+                </div>
+                
+                <div class="nav-bar" style="justify-content: center; width: 100%; margin-top: 3cqh;">
+                    <img src="assets/Home.png" class="img-nav-btn" onmouseenter="playHoverSound()" onclick="playClickSound(); goToPage('page-home')" alt="Home">
+                </div>
+                
+            </div>
+        </section>
+
+        <section id="page-guide" class="page page-has-char">
+            <h2 class="page-title">Panduan Pengguna</h2>
+            <div class="content-box">
+                <h3>Cara Menggunakan Media</h3>
+                <p>Selamat datang di Media Interaktif Fisika! Ikuti petunjuk berikut untuk pengalaman belajar terbaik:</p>
+                <ul>
+                    <li><b>Eksplorasi Materi:</b> Gunakan menu <i>Materi</i> dan <i>Contoh</i> untuk memahami konsep Energi Terbarukan.</li>
+                    <li><b>Simulasi:</b> Klik menu <i>Simulasi</i> untuk melihat bagaimana energi diubah menjadi listrik secara visual.</li>
+                    <li><b>Sistem Poin:</b> Selesaikan tantangan di menu <i>Evaluasi</i>.</li>
+                    <li><b>Karya Kita:</b> Inspirasi karya bisa dipilih dari Menu Karya Kita ataupun ide ide lainnya.</li>
+                    <li><b>Audio:</b> Klik ikon speaker di pojok kiri bawah untuk menyalakan/mematikan suara.</li>
+                </ul>
+            </div>
+            <div class="nav-bar"><img src="assets/backtomenu.png" class="img-nav-btn" onmouseenter="playHoverSound()" onclick="playClickSound(); goToPage('page-menu')" alt="Menu"></div>
+        </section>
+
+        <section id="page-objectives" class="page page-has-char">
+            <h2 class="page-title">Tujuan Pembelajaran</h2>
+            <div class="content-box">
+                <div style="margin-bottom: 3cqh;">
+                    <h3 style="border-bottom: .3cqh solid #00d2d3; color: #00d2d3; display: block;">Capaian Pembelajaran</h3>
+                    <p style="font-style: italic; font-size: 2.5cqh; color: #ced6e0; line-height: 1.4;">
+                        "Murid mampu menganalisis pemanfaatan energi alternatif untuk mengatasi permasalahan ketersediaan energi."
+                    </p>
+                </div>
+
+                <div>
+                    <h3 style="display: block;">Tujuan Pembelajaran</h3>
+                    <ol>
+                        <li><b>Menganalisis</b> berbagai sumber energi terbarukan (Matahari, Angin, Air, Panas Bumi) dan proses perubahan energinya.</li>
+                        <li><b>Memahami</b> prinsip kerja dasar dari pembangkit listrik yang menggunakan energi alternatif.</li>
+                        <li><b>Mengevaluasi</b> dampak dan keuntungan penggunaan energi terbarukan bagi lingkungan hidup.</li>
+                        <li><b>Membuat karya</b> yang menunjukkan pemanfaatan energi alternatif.</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="nav-bar">
+                <img src="assets/backtomenu.png" class="img-nav-btn" onmouseenter="playHoverSound()" onclick="playClickSound(); goToPage('page-menu')" alt="Menu">
+                <img src="assets/next.png" class="img-nav-btn" onmouseenter="playHoverSound()" onclick="playClickSound(); goToPage('page-learn')" alt="Next">
+            </div>
+        </section>
+
+       <section id="page-learn" class="page page-has-char">
+    <h2 class="page-title">Materi Pembelajaran</h2>
+    
+    <div class="content-box" style="padding: 1cqh; overflow: hidden; display: flex; flex-direction: column; align-items: center; background: rgba(0,0,0,0.8);">
+        
+        <div id="slider-container" style="width: 100%; height: 100%; background: #222; border-radius: 1.5cqh; overflow: hidden; position: relative; border: 2px solid #3c40c6;">
+            <img id="materi-slide" src="assets/materi/1.jpg" 
+                 style="width: 100%; height: 100%; object-fit: contain;" 
+                 onerror="this.src='https://via.placeholder.com/800x450?text=Gambar+Materi+Tidak+Ditemukan'">
+            
+            <div id="slide-indicator" style="position: absolute; bottom: 2cqh; right: 2cqw; background: rgba(0,0,0,0.7); color: white; padding: 0.5cqh 1.5cqw; border-radius: 5cqh; font-weight: bold; font-size: 1.8cqh;">
+                1 / 10
+            </div>
+        </div>
+        </div>
+
+    <div class="nav-bar">
+        <img src="assets/previous.png" class="img-nav-btn" onclick="prevSlide()" alt="Prev">
+        <img src="assets/backtomenu.png" class="img-nav-btn" onclick="goToPage('page-menu')" alt="Menu">
+        <img src="assets/next.png" class="img-nav-btn" onclick="nextSlide()" alt="Next">
+    </div>
+</section>
+
+        <section id="page-example" class="page">
+            <h2 class="page-title">Contoh Konsep Energi</h2>
+            <div class="content-box">
+                <div class="sim-container">
+                    <div class="sim-controls">
+                        <button class="sim-btn" onclick="showExample('surya', this)">☀️ Surya</button>
+                        <button class="sim-btn" onclick="showExample('angin', this)">🌬️ Angin</button>
+                        <button class="sim-btn" onclick="showExample('air', this)">💧 Air (PLTA)</button>
+                        <button class="sim-btn" onclick="showExample('panasbumi', this)">🌋 Panas Bumi</button>
+                    </div>
+                    <div class="sim-display">
+                        <div class="sim-visual" id="example-visual">
+                            <p style="color:#7f8c8d; font-size:2.5cqh; font-weight:bold;">Pilih topik untuk melihat detail</p>
+                        </div>
+                        <div class="sim-text" id="example-text">
+                            <h4 style="color:#f9eb25; font-size: 2.8cqh; margin-bottom: 1cqh;">Penjelasan Konsep</h4>
+                            <p style="color: white; font-size: 2.2cqh;">Pilih salah satu sumber energi di atas.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="nav-bar">
+                <img src="assets/previous.png" class="img-nav-btn" onclick="goToPage('page-learn')" alt="Prev">
+                <img src="assets/backtomenu.png" class="img-nav-btn" onclick="goToPage('page-menu')" alt="Menu">
+                <img src="assets/next.png" class="img-nav-btn" onclick="goToPage('page-sim')" alt="Next">
+            </div>
+        </section>
+
+        <section id="page-sim" class="page">
+            <h2 class="page-title">Simulasi Pembangkit Listrik</h2>
+            <div class="content-box" style="padding:0; overflow:hidden;">
+                <div class="sim-container" style="gap:0;">
+                    <div class="sim-controls" style="padding: 1.5cqh 2cqw; background: rgba(0,0,0,0.5); z-index: 100;">
+                        <button class="sim-btn" onmouseenter="playHoverSound()" onclick="playClickSound(); runSim('surya', this)">☀️ Surya</button>
+                        <button class="sim-btn" onmouseenter="playHoverSound()" onclick="playClickSound(); runSim('angin', this)">🌬️ Angin</button>
+                        <button class="sim-btn" onmouseenter="playHoverSound()" onclick="playClickSound(); runSim('air', this)">💧 Air (PLTA)</button>
+                        <button class="sim-btn" onmouseenter="playHoverSound()" onclick="playClickSound(); runSim('panasbumi', this)">🌋 Panas Bumi</button>
+                    </div>
+                    <div class="sim-display" style="gap:0; border-radius:0;">
+                        <div class="sim-visual" id="visual-area" style="width:100%; border-radius:0; border:none;"><p style="color: #7f8c8d; font-size: 2.5cqh; font-weight: bold;">Pilih energi untuk disimulasikan</p></div>
+                    </div>
+                </div>
+            </div>
+            <div class="nav-bar">
+                <img src="assets/previous.png" class="img-nav-btn" onmouseenter="playHoverSound()" onclick="playClickSound(); goToPage('page-example')" alt="Prev">
+                <img src="assets/backtomenu.png" class="img-nav-btn" onmouseenter="playHoverSound()" onclick="playClickSound(); goToPage('page-menu')" alt="Menu">
+                <img src="assets/next.png" class="img-nav-btn" onmouseenter="playHoverSound()" onclick="playClickSound(); goToPage('page-exercise-menu')" alt="Next">
+            </div>
+        </section>
+
+      <section id="page-exercise-menu" class="page page-has-char">
+    <h2 class="page-title">Pilih Evaluasi</h2>
+    
+    <div class="content-box" style="text-align: center; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1.5cqh 0.5cqw; overflow: hidden;">
+        
+        <p style="margin-bottom: 1cqh; font-weight:bold; color: #ffdd59; font-size: 2.5cqh;">Kumpulkan maksimal 300 Poin!</p>
+        
+        <div class="logo-level-container">
+            
+            <div class="logo-level-item" onclick="playClickSound(); startLevel1()">
+                <img src="assets/logo_lvl1.png" alt="Level 1" class="img-level-logo">
+                <span id="s-lvl1" class="status-badge-3d">50 Pts</span>
+            </div>
+            
+            <div class="logo-level-item" onclick="playClickSound(); startLevel2()">
+                <img src="assets/logo_lvl2.png" alt="Level 2" class="img-level-logo">
+                <span id="s-lvl2" class="status-badge-3d">100 Pts</span>
+            </div>
+            
+            <div class="logo-level-item" onclick="playClickSound(); startLevel3()">
+                <img src="assets/logo_lvl3.png" alt="Level 3" class="img-level-logo">
+                <span id="s-lvl3" class="status-badge-3d">150 Pts</span>
+            </div>
+            
+        </div>
+        
+    </div>
+    <div class="nav-bar" style="justify-content: center;">
+        <img src="assets/backtomenu.png" class="img-nav-btn" onclick="goToPage('page-menu')">
+    </div>
+</section>
+
+        <section id="page-level-1" class="page page-has-char">
+            <h2 class="page-title">Level 1: Jodohkan Istilah</h2>
+            <div class="content-box" style="padding-top:1cqh;">
+                <p style="text-align: center; color:#fff; font-weight:800; font-size:2.2cqh; margin-bottom:2cqh;">Klik istilah Fisika lalu klik artinya!</p>
+                <div class="match-container"><div class="match-column" id="col-eng"></div><div class="match-column" id="col-ind"></div></div>
+                <div id="lvl1-done" style="display:none; text-align:center; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(255,255,255,0.95); padding:4cqh 5cqw; border-radius:2cqh; box-shadow:0 1cqh 3cqh rgba(0,0,0,0.5); z-index:10; width:80cqw; max-width:50cqw;">
+                    <h3 id="lvl1-msg" style="color:#05c46b; font-size:4cqh; border:none;">🎉 Level Selesai!</h3>
+                    <img src="assets/next.png" class="img-nav-btn" style="margin-top:3cqh;" onmouseenter="playHoverSound()" onclick="playClickSound(); endLevel('page-exercise-menu')" alt="Continue">
+                </div>
+            </div>
+            <div class="nav-bar" style="justify-content: center;"><img src="assets/backtomenu.png" class="img-nav-btn" onmouseenter="playHoverSound()" onclick="playClickSound(); endLevel('page-exercise-menu')" alt="Abandon"></div>
+        </section>
+
+        <section id="page-level-2" class="page page-has-char">
+    <h2 class="page-title">Level 2: Benar/Salah</h2>
+    <div class="content-box" style="position: relative; display: flex; flex-direction: column;"> 
+        <div id="instant-feedback-v2" class="feedback-style"></div>
+        <div id="instant-feedback"></div> <div class="passage-box">Jawablah pernyataan di bawah ini dengan BENAR atau SALAH!</div>
+        <div id="lvl2-game-area" style="display:flex; flex-direction:column; flex-grow:1;">
+            <div class="question-box" id="lvl2-question">Loading...</div>
+            <div class="tf-container">
+                <button class="tf-btn btn-true" onclick="answerLvl2(true, this)">BENAR</button>
+                <button class="tf-btn btn-false" onclick="answerLvl2(false, this)">SALAH</button>
+            </div>
+        </div>
+        <div id="lvl2-result" class="score-screen" style="display: none;">
+            <h3 style="font-size: 4cqh; color: #3c40c6; border:none;">Level Selesai!</h3>
+            <div class="score-text" id="lvl2-score">0/5</div>
+            <img src="assets/next.png" class="img-nav-btn" style="margin-top:3cqh;" onclick="endLevel('page-exercise-menu')">
+        </div>
+    </div>
+    <div class="nav-bar" style="justify-content: center;"><img src="assets/backtomenu.png" class="img-nav-btn" onclick="endLevel('page-exercise-menu')"></div>
+</section>
+
+        <section id="page-level-3" class="page page-has-char">
+    <h2 class="page-title">Level 3: Kuis Konsep</h2>
+    <div class="content-box" style="position: relative; display: flex; flex-direction: column;"> 
+        <div id="instant-feedback-v3" class="feedback-style"></div>
+
+        <div class="passage-box">Pilih jawaban yang paling tepat!</div>
+        <div id="lvl3-game-area" style="display:flex; flex-direction:column; flex-grow:1;">
+            <div class="question-box" id="lvl3-question">Loading...</div>
+            <div class="options-container" id="lvl3-options"></div>
+        </div>
+        <div id="lvl3-result" class="score-screen" style="display: none;">
+            <h3 style="font-size: 4cqh; color: #3c40c6; border:none;">Level Selesai!</h3>
+            <div class="score-text" id="lvl3-score">0/5</div>
+            <img src="assets/next.png" class="img-nav-btn" style="margin-top:3cqh;" onclick="endLevel('page-exercise-menu')">
+        </div>
+    </div>
+    <div class="nav-bar" style="justify-content: center;">
+        <img src="assets/backtomenu.png" class="img-nav-btn" onclick="endLevel('page-exercise-menu')">
+    </div>
+</section>
+
+        <section id="page-karya" class="page">
+            <div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; padding-top: 2cqh;">
+                <h2 class="page-title" style="font-size: 5cqh; margin-bottom: 1cqh;">Karya Kita</h2>
+                
+                <div class="content-box" style="width: 95%; height: 75cqh; padding: 2cqh; overflow: hidden;">
+                    <p style="text-align: center; color: #ffdd59; font-weight: 800; font-size: 2.2cqh; margin-bottom: 2cqh;">Pilih proyek untuk melihat panduan rakitan SMA:</p>
+                    
+                    <div style="display: flex; gap: 2cqw; justify-content: center; margin-bottom: 2cqh;">
+                        <button class="sim-btn" onclick="showKaryaDetail('powerbank')">🔋 Power Bank</button>
+                        <button class="sim-btn" onclick="showKaryaDetail('kipas')">🌬️ Kipas Surya</button>
+                        <button class="sim-btn" onclick="showKaryaDetail('peltier')">🔥 Lampu Peltier</button>
+                    </div>
+
+                    <div id="karya-detail-area" style="display: none; background: rgba(0,0,0,0.6); border: 2px solid #3c40c6; border-radius: 2cqh; padding: 2cqh; height: 50cqh; overflow: hidden;">
+                        <div style="display: flex; height: 100%; gap: 3cqw;">
+                            
+                            <div style="flex: 1.2; height: 100%; background: #000; border-radius: 1.5cqh; overflow: hidden; border: 1px solid #575fcf;">
+                                <img id="karya-peta-img" src="" style="width: 100%; height: 100%; object-fit: contain;">
+                            </div>
+
+                            <div style="flex: 1; display: flex; flex-direction: column; overflow-y: auto;">
+                                <h3 id="karya-title" style="color: #00d2d3; font-size: 3.5cqh; border:none; margin-bottom:1cqh; padding:0;"></h3>
+                                
+                                <h4 style="color: #ffdd59; font-size: 2.5cqh; margin:0;">📋 ALAT & BAHAN:</h4>
+                                <p id="karya-materials" style="font-size: 2.2cqh; color: #fff; margin-bottom: 1.5cqh; line-height: 1.3; font-weight: bold;"></p>
+                                
+                                <h4 style="color: #0be881; font-size: 2.5cqh; margin:0;">🛠️ LANGKAH KERJA:</h4>
+                                <p id="karya-steps" style="font-size: 2.2cqh; color: #f1f2f6; line-height: 1.3;"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-bar">
+                    <img src="assets/previous.png" class="img-nav-btn" onmouseenter="playHoverSound()" onclick="playClickSound(); goToPage('page-exercise-menu')" alt="Prev">
+                    <img src="assets/backtomenu.png" class="img-nav-btn" onmouseenter="playHoverSound()" onclick="playClickSound(); goToPage('page-menu')" alt="Menu">
+                    <img src="assets/next.png" class="img-nav-btn" onmouseenter="playHoverSound()" onclick="playClickSound(); goToPage('page-guide')" alt="Next">
+                </div>
+            </div>
+        </section>
+
+        <section id="page-certificate" class="page page-has-char">
+            <div class="certificate-wrapper">
+                <div class="certificate-inner">
+                    <div class="cert-header">Sertifikat Pencapaian Fisika</div>
+                    <div class="cert-name" id="cert-display-name">Siswa</div>
+                    <p class="cert-desc" style="margin-top: 1cqh; font-weight: 500;">Telah memahami materi Energi Terbarukan Kelas X.</p>
+                    <div class="cert-score-box">
+                        <div style="font-size: 1.6cqh; color: #7f8c8d; text-transform: uppercase;">Skor Akhir</div>
+                        <div class="cert-score-number" id="cert-display-score">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="nav-bar" style="justify-content: left; gap: 2cqw;">
+                <img src="assets/backtomenu.png" class="img-nav-btn" onmouseenter="playHoverSound()" onclick="playClickSound(); goToPage('page-menu')" alt="Menu">
+                <img src="assets/print.png" class="img-nav-btn" onmouseenter="playHoverSound()" onclick="playClickSound(); window.print()" alt="Print">
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // --- DATA PENGGUNA GLOBAL ---
+        let username = ""; let userAvatar = ""; let totalPoints = 0; const MAX_POINTS = 300; let saves = { lvl1: false, lvl2: false, lvl3: false };
+        let windAnimId = null; let geoAnimId = null; let hydroAnimId = null;
+
+        window.onload = () => {
+            try {
+                const savedData = localStorage.getItem('physicsAppSave');
+                if(savedData) {
+                    const data = JSON.parse(savedData); 
+                    username = data.name; totalPoints = data.pts || 0; saves = data.saves; userAvatar = data.avatar || 'boy';
+                    document.getElementById('username-input').value = username;
+                    document.getElementById('welcome-text').innerText = "Selamat datang kembali! Klik tombol masuk.";
+                    document.getElementById('btn-reset').style.display = 'inline-block';
+                    
+                    document.querySelectorAll('.avatar-btn').forEach(btn => btn.classList.remove('selected'));
+                    let btnElem = document.getElementById('btn-' + userAvatar);
+                    if(btnElem) btnElem.classList.add('selected');
+                    
+                    updateMenuStatus(); updatePointsDisplay();
+                }
+            } catch(e) { console.log("Storage terblokir", e); }
+        };
+
+        // --- SISTEM AUDIO & UTIL ---
+        let audioCtx; let isMuted = false; let isSoundOn = false; 
+        function initAudio() { try { if(!audioCtx) { const AudioContext = window.AudioContext || window.webkitAudioContext; if(AudioContext) audioCtx = new AudioContext(); } if(audioCtx && audioCtx.state === 'suspended') { audioCtx.resume().catch(e=>{}); } } catch(e) {} }
+        function playTone(freq, type, duration) { try { if(!audioCtx || isMuted || !isSoundOn) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.value = freq; osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration); osc.stop(audioCtx.currentTime + duration); } catch(e){} }
+        function playClickSound() { try { const clickSound = document.getElementById('audio-click'); if (isSoundOn && clickSound) { clickSound.currentTime = 0; clickSound.play().catch(e=>{}); } } catch(e){} }
+        function toggleGlobalSound() { try { const bgMusic = document.getElementById('audio-bg'); const soundBtn = document.getElementById('global-sound-btn'); isSoundOn = !isSoundOn; isMuted = !isSoundOn; if (isSoundOn) { if(bgMusic) bgMusic.play().catch(e => console.log("Perlu interaksi user")); if(soundBtn) soundBtn.src = "assets/Soundon.png"; initAudio(); } else { if(bgMusic) bgMusic.pause(); if(soundBtn) soundBtn.src = "assets/soundoff.png"; } } catch(e){} }
+        
+        function triggerEarthquake() {
+            const container = document.getElementById('main-container');
+            if(container) { container.classList.add('shake-effect'); setTimeout(() => container.classList.remove('shake-effect'), 400); }
+        }
+        function playWrong() { try { if (isSoundOn) { const wrongSound = document.getElementById('audio-wrong'); if(wrongSound) { wrongSound.currentTime = 0; wrongSound.play().catch(e=>{}); } triggerEarthquake(); } } catch(e){} }
+        function playCorrect() { try { if (isSoundOn) { const correctSound = document.getElementById('audio-correct'); if(correctSound) { correctSound.currentTime = 0; correctSound.play().catch(e=>{}); } } } catch(e){} }
+        function playHoverSound() { playTone(900, 'sine', 0.05); }
+
+        function showHUD(show) { } // Placeholder karena kita ingin skor selalu tampil
+        function stopTimer() {} // Dikosongkan, timer visual saja
+        function updateMenuStatus() {
+            try {
+                // Jangan ganti teks '50 Pts' jadi 'SELESAI', tapi ubah warna badge-nya saja
+                if(saves.lvl1) {
+                    let s1 = document.getElementById('s-lvl1');
+                    if(s1) { s1.style.background = "linear-gradient(145deg, #0be881, #05c46b)"; s1.style.boxShadow = "0 0.5cqh 0 #049551, 0 0.8cqh 1cqh rgba(0,0,0,0.5)"; }
+                }
+                if(saves.lvl2) {
+                    let s2 = document.getElementById('s-lvl2');
+                    if(s2) { s2.style.background = "linear-gradient(145deg, #575fcf, #3c40c6)"; s2.style.boxShadow = "0 0.5cqh 0 #1e2068, 0 0.8cqh 1cqh rgba(0,0,0,0.5)"; }
+                }
+                if(saves.lvl3) {
+                    let s3 = document.getElementById('s-lvl3');
+                    if(s3) { s3.style.background = "linear-gradient(145deg, #ff5e57, #ff3f34)"; s3.style.boxShadow = "0 0.5cqh 0 #c92f25, 0 0.8cqh 1cqh rgba(0,0,0,0.5)"; }
+                }
+            } catch(e){}
+        }
+        function updatePointsDisplay() {
+            try {
+                let ptsEl = document.getElementById('display-points');
+                if(ptsEl) ptsEl.innerText = Math.floor(totalPoints);
+            }catch(e){}
+        }
+
+        // --- FUNGSI AMAN FULLSCREEN & STORAGE ---
+        function requestFullScreen() { try { let elem = document.documentElement; if (elem.requestFullscreen) { let req = elem.requestFullscreen(); if(req && req.catch) req.catch(e=>{}); } else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); } } catch(e) {} }
+        function saveData() { try { localStorage.setItem('physicsAppSave', JSON.stringify({ name: username, pts: totalPoints, saves: saves, avatar: userAvatar })); } catch(e) {} updateMenuStatus(); }
+        function resetSave() { try { localStorage.removeItem('physicsAppSave'); } catch(e){} location.reload(); }
+
+        // --- SISTEM HALAMAN ---
+        function goToCharacterSelect() { 
+            try { 
+                let input = document.getElementById('username-input').value.trim(); 
+                if(input === "") { alert("Silakan masukkan NAMA terlebih dahulu!"); playWrong(); return; } 
+                username = input; 
+            } catch(e) {}
+            goToPage('page-character');
+            try { playClickSound(); initAudio(); } catch(e){}
+        }
+
+        function selectAvatar(type) { 
+            try { playClickSound(); document.querySelectorAll('.avatar-btn').forEach(btn => btn.classList.remove('selected')); let target = document.getElementById('btn-' + type); if(target) target.classList.add('selected'); userAvatar = type; } catch(e){} 
+        }
+
+        function loginUser() { 
+            if(userAvatar === "") { alert("Silakan pilih KARAKTER terlebih dahulu!"); playWrong(); return; } 
+            goToPage('page-home'); 
+            try { document.getElementById('display-username').innerText = username; document.getElementById('display-username-hud').innerText = username; document.getElementById('display-avatar').src = (userAvatar === 'boy') ? "assets/boy.png" : "assets/girl.png"; } catch(e){}
+            try { playClickSound(); } catch(e){}
+            try { requestFullScreen(); } catch(e){}
+            setTimeout(() => { saveData(); }, 100); 
+        }
+        
+        function goToPage(pageId) { 
+            try {
+                if(windAnimId) { cancelAnimationFrame(windAnimId); windAnimId = null; }
+                if(geoAnimId) { clearTimeout(geoAnimId); geoAnimId = null; }
+                if(hydroAnimId) { cancelAnimationFrame(hydroAnimId); hydroAnimId = null; }
+
+                document.querySelectorAll('.page').forEach(page => page.classList.remove('active')); 
+                let targetPage = document.getElementById(pageId);
+                if(targetPage) targetPage.classList.add('active');
+
+                if(pageId === 'page-welcome' || pageId === 'page-character') { document.getElementById('profile-container').style.display = "none"; document.getElementById('global-sound-btn').style.display = "none"; } else { document.getElementById('profile-container').style.display = "flex"; document.getElementById('global-sound-btn').style.display = "block"; }
+                
+                // Cari bagian ini di fungsi goToPage kamu dan samakan:
+if(pageId === 'page-welcome' || pageId === 'page-character' || pageId === 'page-menu' || pageId === 'page-sim' || pageId === 'page-example' || pageId === 'page-karya') { 
+    document.getElementById('global-character-container').style.display = "none"; 
+} else { 
+    document.getElementById('global-character-container').style.display = "flex"; 
+    document.getElementById('global-character-img').src = (userAvatar === 'boy') ? "assets/boy.png" : "assets/girl.png"; 
+}
+            } catch(e) {}
+        }
+        function endLevel(page) { goToPage(page); }
+
+        // ==========================================
+        // GAME LOGIC (EVALUASI LEVEL 1, 2, 3)
+        // ==========================================
+        
+        // --- LEVEL 1 : Menjodohkan ---
+        let lvl1Terms = [ { id: 1, text: "Fotovoltaik", type: "term" }, { id: 2, text: "Turbin", type: "term" }, { id: 3, text: "Generator", type: "term" }, { id: 4, text: "Geotermal", type: "term" } ];
+        let lvl1Defs = [ { id: 1, text: "Cahaya menjadi listrik", type: "def" }, { id: 2, text: "Berputar oleh aliran fluida", type: "def" }, { id: 3, text: "Penghasil arus listrik", type: "def" }, { id: 4, text: "Panas dari perut bumi", type: "def" } ];
+        let selectedTerm = null;
+        let lvl1Matches = 0;
+
+        function startLevel1() {
+            goToPage('page-level-1');
+            document.getElementById('lvl1-done').style.display = 'none';
+            lvl1Matches = 0; selectedTerm = null;
+            let shuffledDefs = [...lvl1Defs].sort(() => Math.random() - 0.5);
+            
+            let termHtml = ''; lvl1Terms.forEach(t => { termHtml += `<div class="match-item" id="term-${t.id}" onclick="selectLvl1(${t.id}, 'term')">${t.text}</div>`; });
+            document.getElementById('col-eng').innerHTML = termHtml;
+            
+            let defHtml = ''; shuffledDefs.forEach(d => { defHtml += `<div class="match-item" id="def-${d.id}" onclick="selectLvl1(${d.id}, 'def')">${d.text}</div>`; });
+            document.getElementById('col-ind').innerHTML = defHtml;
+        }
+
+        function selectLvl1(id, type) {
+            playClickSound();
+            if(type === 'term') {
+                document.querySelectorAll('#col-eng .match-item').forEach(el => el.classList.remove('selected'));
+                document.getElementById(`term-${id}`).classList.add('selected');
+                selectedTerm = id;
+            } else if(type === 'def' && selectedTerm !== null) {
+                if(selectedTerm === id) { // Cocok
+                    playCorrect();
+                    document.getElementById(`term-${id}`).classList.add('matched');
+                    document.getElementById(`def-${id}`).classList.add('matched');
+                    document.getElementById(`term-${id}`).onclick = null;
+                    document.getElementById(`def-${id}`).onclick = null;
+                    selectedTerm = null; lvl1Matches++;
+                    
+                    if(!saves.lvl1) { totalPoints += 12.5; updatePointsDisplay(); } // Tambah skor jika belum pernah tamat
+
+                    if(lvl1Matches === 4) {
+                        setTimeout(() => { 
+                            document.getElementById('lvl1-done').style.display = 'block'; 
+                            saves.lvl1 = true; saveData(); 
+                        }, 500);
+                    }
+                } else { // Salah
+                    playWrong();
+                    document.getElementById(`term-${selectedTerm}`).classList.remove('selected');
+                    selectedTerm = null;
+                }
+            }
+        }
+
+        // --- LEVEL 2 : Benar / Salah ---
+        let lvl2Index = 0; let lvl2Score = 0;
+        const lvl2Questions = [
+            { q: "PLTA memanfaatkan energi potensial air dari ketinggian tertentu.", a: true },
+            { q: "Energi surya dapat dibangkitkan pada malam hari (tanpa menggunakan baterai penyimpan).", a: false },
+            { q: "Energi geotermal berasal dari panas magma di dalam perut bumi.", a: true },
+            { q: "Turbin angin akan menghasilkan listrik lebih maksimal jika diletakkan di ruang bawah tanah tertutup.", a: false },
+            { q: "Penggunaan energi terbarukan membantu mengurangi emisi gas rumah kaca.", a: true }
+        ];
+
+        function startLevel2() {
+            goToPage('page-level-2');
+            lvl2Index = 0; lvl2Score = 0;
+            document.getElementById('lvl2-result').style.display = 'none';
+            document.getElementById('lvl2-game-area').style.display = 'flex';
+            showLvl2Question();
+        }
+        function showLvl2Question() { document.getElementById('lvl2-question').innerText = lvl2Questions[lvl2Index].q; }
+        
+        // JAWABAN LEVEL 2 (BENAR/SALAH)
+        function answerLvl2(ans, btnTerpilih) {
+            // 1. Cek jawaban
+            const isCorrect = (ans === lvl2Questions[lvl2Index].a);
+            
+            // 2. Kunci tombol agar tidak bisa diklik berulang-ulang
+            const container = document.querySelector('.tf-container');
+            if(container) container.style.pointerEvents = 'none';
+
+            // 3. Munculkan suara dan warna tombol
+            if(isCorrect) { 
+                playCorrect(); 
+                lvl2Score += 20; 
+                btnTerpilih.style.background = "#05c46b"; // Warna Hijau
+                if(!saves.lvl2) { totalPoints += 20; updatePointsDisplay(); }
+            } else { 
+                playWrong(); 
+                btnTerpilih.style.background = "#ff3f34"; // Warna Merah
+            }
+
+            // 4. Munculkan tulisan feedback (Tepat/Tidak Tepat)
+            tampilkanPesanFeedback(isCorrect);
+
+            // 5. JEDA 2 DETIK (2000ms) LALU LANJUT
+            // Waktu ditambah agar murid sempat melihat hasil evaluasinya
+            setTimeout(() => {
+                // Reset tampilan untuk soal berikutnya
+                btnTerpilih.style.background = ""; 
+                if(container) container.style.pointerEvents = 'auto'; 
+                
+                lvl2Index++;
+                
+                if(lvl2Index < lvl2Questions.length) { 
+                    showLvl2Question(); 
+                } else { 
+                    endLvl2(); 
+                }
+            }, 2000); // <-- Angka ini yang menentukan lamanya (2000 = 2 detik)
+        }
+        function endLvl2() {
+            document.getElementById('lvl2-game-area').style.display = 'none';
+            document.getElementById('lvl2-result').style.display = 'block';
+            document.getElementById('lvl2-score').innerText = lvl2Score + " Pts";
+            saves.lvl2 = true; saveData();
+        }
+
+        // --- LEVEL 3 : Kuis Konsep ---
+        let lvl3Index = 0; let lvl3Score = 0;
+        const lvl3Questions = [
+            { q: "Apa fungsi utama inverter pada PLTS (Surya)?", opts: ["Menyimpan listrik cadangan", "Mengubah arus DC menjadi AC", "Menangkap lebih banyak cahaya", "Mendinginkan suhu panel"], ans: 1 },
+            { q: "Komponen yang mengubah putaran energi mekanik menjadi energi listrik adalah...", opts: ["Turbin", "Generator", "Kapasitor", "Baterai"], ans: 1 },
+            { q: "Parameter penentu besarnya energi pada PLTA (Air) adalah...", opts: ["Suhu air yang tinggi", "Warna air bendungan", "Ketinggian jatuh (h) dan debit air", "Arah aliran angin sekitar"], ans: 2 }
+        ];
+
+        function startLevel3() {
+            goToPage('page-level-3');
+            lvl3Index = 0; lvl3Score = 0;
+            document.getElementById('lvl3-result').style.display = 'none';
+            document.getElementById('lvl3-game-area').style.display = 'flex';
+            showLvl3Question();
+        }
+        function showLvl3Question() {
+            document.getElementById('lvl3-question').innerText = lvl3Questions[lvl3Index].q;
+            let optsHtml = '';
+            lvl3Questions[lvl3Index].opts.forEach((opt, i) => { optsHtml += `<button class="option-btn" onclick="answerLvl3(${i})">${opt}</button>`; });
+            document.getElementById('lvl3-options').innerHTML = optsHtml;
+        }
+        // JAWABAN LEVEL 3 (PILIHAN GANDA)
+        function answerLvl3(ans) {
+    const optionsContainer = document.getElementById('lvl3-options');
+    const buttons = optionsContainer.getElementsByTagName('button');
+    const correctIdx = lvl3Questions[lvl3Index].ans;
+    const isCorrect = (ans === correctIdx);
+    
+    if(optionsContainer) optionsContainer.style.pointerEvents = 'none';
+
+    // Panggil notifikasi ke wadah v3
+    tampilkanPesanFeedback(isCorrect, 3);
+
+    if(isCorrect) { 
+        playCorrect(); 
+        lvl3Score += 50; 
+        if(buttons[ans]) buttons[ans].style.background = "#05c46b"; 
+        if(!saves.lvl3) { totalPoints += 50; updatePointsDisplay(); }
+    } else { 
+        playWrong(); 
+        if(buttons[ans]) buttons[ans].style.background = "#ff3f34"; 
+        if(buttons[correctIdx]) buttons[correctIdx].style.background = "#05c46b"; 
+    }
+
+    setTimeout(() => {
+        if(optionsContainer) optionsContainer.style.pointerEvents = 'auto'; 
+        lvl3Index++;
+        if(lvl3Index < lvl3Questions.length) { 
+            showLvl3Question(); 
+        } else { 
+            endLvl3(); 
+        }
+    }, 2000);
+}
+        function endLvl3() {
+            document.getElementById('lvl3-game-area').style.display = 'none';
+            document.getElementById('lvl3-result').style.display = 'block';
+            document.getElementById('lvl3-score').innerText = lvl3Score + " Pts";
+            saves.lvl3 = true; saveData();
+        }
+
+        // --- SERTIFIKAT ---
+        function generateCertificate() {
+            if(!saves.lvl1 || !saves.lvl2 || !saves.lvl3) {
+                alert("Selesaikan semua evaluasi (Level 1, 2, dan 3) terlebih dahulu untuk membuka Sertifikat!");
+                playWrong();
+                return;
+            }
+            goToPage('page-certificate');
+            document.getElementById('cert-display-name').innerText = username;
+            document.getElementById('cert-display-score').innerText = Math.floor(totalPoints);
+        }
+
+        // --- TEKS CONTOH ---
+        const exampleData = {
+            surya: { visual: "assets/photovoltaik.png", title: "Panel Surya (Fotovoltaik)", text: `<b>Energi surya didapatkan dari pancaran cahaya dan panas matahari. Komponen utama pengubah energinya adalah sel surya yang terbuat dari bahan semikonduktor, biasanya silikon.</b>` },
+            angin: { visual: "assets/baling.png", title: "Turbin Angin", text: `<b>Angin adalah udara yang bergerak akibat perbedaan tekanan dan suhu di permukaan bumi. Energi kinetik dari massa udara yang bergerak ini ditangkap oleh bilah-bilah turbin angin raksasa.</b>` },
+            air: { visual: "assets/plta.png", title: "Pembangkit Listrik Tenaga Air (PLTA)", text: `<b>PLTA memanfaatkan energi potensial air yang berada di tempat tinggi (misalnya bendungan atau air terjun). Rumus energi potensial adalah Ep = m.g.h, di mana 'h' adalah ketinggian air.</b>` },
+            panasbumi: { visual: "assets/termal.png", title: "Panas Bumi (Geotermal)", text: `<b>Energi panas bumi memanfaatkan panas dari dalam perut bumi (magma) yang memanaskan air tanah menjadi uap bertekanan tinggi untuk memutar generator listrik.</b>` }
+        };
+        function showExample(type, btn) {
+            try {
+                if (typeof playClickSound === "function") playClickSound();
+                document.querySelectorAll('#page-example .sim-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
+                
+                // Ini bagian yang diubah untuk menampilkan gambar
+                document.getElementById('example-visual').innerHTML = `<img src="${exampleData[type].visual}" style="width: 100%; height: 100%; object-fit: cover; border-radius: inherit;" alt="${exampleData[type].title}">`;
+                
+                document.getElementById('example-text').innerHTML = `<h4 style="color:#f9eb25; font-size: 2.8cqh; margin-bottom: 1cqh;">${exampleData[type].title}</h4><p style="color:white; font-size: 2.2cqh;">${exampleData[type].text}</p>`;
+            } catch(e){}
+        }
+
+        // --- 1. SIMULATOR SURYA (V2 PREMIUM DESIGN) ---
+        let solarStep = 1; let solarIntensity = 70; let isTransitioning = false;
+        const solarStepsData = [
+            { id: 1, title: "Pembangkit Surya", sub: "Foton & Eksitasi", desc: "Sinar matahari membawa partikel foton yang menghantam lapisan semikonduktor pada panel surya untuk memulai proses pembangkitan.", color: "linear-gradient(to right, #fbbf24, #f97316)", accent: "#f59e0b", metric: "Iradiasi", unit: "W/m²", fact: "Foton menempuh jarak 150 juta km dalam waktu sekitar 8 menit untuk sampai ke bumi." },
+            { id: 2, title: "Konversi Fotovoltaik", sub: "Proses P-N Junction", desc: "Pemisahan muatan positif dan negatif pada sel silikon menciptakan medan listrik yang memaksa elektron mengalir menjadi arus searah (DC).", color: "linear-gradient(to right, #3b82f6, #4f46e5)", accent: "#2563eb", metric: "Teg. DC", unit: "V", fact: "Panel surya mengubah energi cahaya langsung menjadi energi listrik tanpa proses mekanis." },
+            { id: 3, title: "Modulasi Inverter", sub: "Pure Sine Wave", desc: "Inverter mengubah arus DC menjadi gelombang sinus AC 220V yang stabil dan sesuai dengan standar peralatan rumah tangga.", color: "linear-gradient(to right, #a855f7, #c026d3)", accent: "#9333ea", metric: "Frekuensi", unit: "Hz", fact: "Inverter pintar juga berfungsi sebagai sistem proteksi otomatis." },
+            { id: 4, title: "Distribusi Beban", sub: "Smart Grid", desc: "Listrik bersih yang telah dikonversi kini siap digunakan untuk menghidupkan seluruh peralatan di rumah Anda secara efisien.", color: "linear-gradient(to right, #10b981, #16a34a)", accent: "#059669", metric: "Beban", unit: "%", fact: "Penggunaan PLTS mandiri dapat mengurangi tagihan listrik dan emisi karbon." }
+        ];
+
+        function updateSolarSimUI() {
+            try {
+                const current = solarStepsData[solarStep - 1];
+                let val = current.id === 1 ? (solarIntensity * 10.5).toFixed(0) : current.id === 2 ? (solarIntensity * 0.48).toFixed(1) : current.id === 3 ? "50.0" : solarIntensity;
+                
+                let photons = '';
+                if (solarStep >= 1) { for(let i=0; i<Math.floor(solarIntensity/8); i++) { photons += `<circle r="2.5" fill="#fff" stroke="#fbbf24" stroke-width="1"><animateMotion dur="${5 - (solarIntensity/20)}s" repeatCount="indefinite" path="M 160 140 L 290 290" begin="${i * 0.45}s"/></circle>`; } }
+                let rays = '';
+                for(let i=0; i<12; i++) { rays += `<line x1="0" y1="0" x2="${65 * Math.cos(i * 30 * Math.PI/180)}" y2="${65 * Math.sin(i * 30 * Math.PI/180)}" stroke="#fbbf24" stroke-width="4" stroke-linecap="round" opacity="${0.5 + (solarIntensity / 150)}"/>`; }
+                let electronDots = '';
+                if(solarStep >= 2) { for(let i=0; i<4; i++){ electronDots += `<circle r="2" fill="#fff"><animate attributeName="cx" values="10;140" dur="1.2s" begin="${i*0.3}s" repeatCount="indefinite"/><animate attributeName="cy" values="${25 + i*20};${25 + i*20}" dur="1s" repeatCount="indefinite"/></circle>`; } }
+
+                let animClass = isTransitioning ? "opacity:0; transform:scale(0.95); filter:blur(2px);" : "opacity:1; transform:scale(1); filter:blur(0);";
+
+                document.getElementById('visual-area').innerHTML = `
+                    <div class="solar-bg" style="width:100%; height:100%; display:flex; flex-direction:row; font-family:'Segoe UI',sans-serif;">
+                        <div class="solar-clouds-bg"></div>
+                        <div class="solar-hud-header">
+                            <div style="display:flex; align-items:center; gap:1cqw;">
+                                <div style="background:#d1fae5; padding:.5cqh; border-radius:1cqh; border:1px solid #a7f3d0;"><span style="font-size:2cqh;">🌲</span></div>
+                                <div><div class="solar-hud-title">PLTS_INTERFACE</div><div style="display:flex; align-items:center; gap:.5cqw;"><div style="width:.5cqw; height:.5cqw; background:#10b981; border-radius:50%;"></div><span style="font-size:1cqh; font-weight:bold; color:#059669; letter-spacing:1px; text-transform:uppercase;">Smart Energy System</span></div></div>
+                            </div>
+                            <div style="display:flex; gap:2cqw; align-items:center; text-align:right;">
+                                <div><div style="font-size:1cqh; color:#64748b; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">Efisiensi Aktual</div><div style="font-size:2cqh; font-weight:900; color:#059669;">${(18 + solarIntensity / 22).toFixed(1)}%</div></div>
+                            </div>
+                        </div>
+                        <div class="solar-main-content">
+                            <div class="solar-visual-area">
+                                <div class="solar-svg-box" style="${animClass}">
+                                    <svg viewBox="0 0 800 450" style="width:100%; height:100%;">
+                                        <defs><filter id="glow" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="6" result="blur" /><feComposite in="SourceGraphic" in2="blur" operator="over" /></filter>
+                                        <radialGradient id="h-glow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="${current.accent}" stop-opacity="${solarIntensity / 180}" /><stop offset="100%" stop-color="${current.accent}" stop-opacity="0" /></radialGradient></defs>
+                                        
+                                        <g transform="translate(140, 110)"><circle r="${45 + (solarIntensity/8)}" fill="#fbbf24" opacity="0.1"><animate attributeName="r" values="${45 + (solarIntensity/8)};${50 + (solarIntensity/8)};${45 + (solarIntensity/8)}" dur="2s" repeatCount="indefinite"/></circle><circle r="40" fill="#fbbf24" filter="url(#glow)" />${rays}</g>
+                                        ${photons}
+                                        <g transform="translate(280, 280) rotate(-15)"><rect width="150" height="110" fill="#0f172a" stroke="#3b82f6" stroke-width="3" rx="8" /><path d="M 0 27 L 150 27 M 0 55 L 150 55 M 0 82 L 150 82 M 37 0 L 37 110 M 75 0 L 75 110 M 112 0 L 112 110" stroke="#334155" stroke-width="1" />
+                                        ${solarStep >= 2 ? `<rect width="150" height="110" fill="${current.accent}" opacity="${solarIntensity / 250}" rx="8" filter="url(#glow)" />` : ''} ${electronDots}</g>
+                                        
+                                        <path d="M 430 320 L 530 320" stroke="${solarStep >= 3 ? '#a855f7' : '#475569'}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${solarStep >= 3 ? '' : '6 6'}" fill="none" />
+                                        ${solarStep >= 3 ? `<circle r="4" fill="#fff" stroke="#a855f7" stroke-width="1.5"><animateMotion dur="1s" repeatCount="indefinite" path="M 430 320 L 530 320" /></circle>` : ''}
+                                        
+                                        <g transform="translate(530, 275)"><rect width="90" height="90" fill="#1e1b4b" stroke="#6366f1" stroke-width="3" rx="20" /><rect x="15" y="15" width="60" height="30" fill="#000" rx="6" /><text x="45" y="35" text-anchor="middle" fill="#4ade80" font-size="14" font-weight="bold">${solarStep >= 3 ? `${(solarIntensity * 12.8).toFixed(0)}W` : "OFF"}</text><path d="M 25 65 Q 45 40 65 65" fill="none" stroke="#a855f7" stroke-width="3" opacity="${solarStep >= 3 ? 1 : 0.2}"><animate attributeName="stroke-dasharray" values="0,60;60,0" dur="0.8s" repeatCount="indefinite" /></path></g>
+                                        
+                                        <path d="M 620 320 L 700 320 L 700 240" stroke="${solarStep >= 4 ? '#10b981' : '#475569'}" stroke-width="6" stroke-linecap="round" fill="none" />
+                                        ${solarStep >= 4 ? `<circle r="4" fill="#fff" stroke="#10b981" stroke-width="1.5"><animateMotion dur="0.8s" repeatCount="indefinite" path="M 620 320 L 700 320 L 700 240" /></circle>` : ''}
+                                        
+                                        <g transform="translate(650, 80)">
+                                            ${solarStep === 4 ? `<circle cx="50" cy="80" r="${40 + solarIntensity/2}" fill="url(#h-glow)" />` : ''}
+                                            <path d="M 0 50 L 50 0 L 100 50 L 100 150 L 0 150 Z" fill="#0f172a" stroke="${solarStep >= 4 ? '#10b981' : '#334155'}" stroke-width="3" />
+                                            <rect x="22" y="75" width="22" height="22" rx="4" fill="${solarStep === 4 ? '#fbbf24' : '#1e293b'}" opacity="${solarStep === 4 ? 0.6 + solarIntensity/150 : 1}" />
+                                            <rect x="56" y="75" width="22" height="22" rx="4" fill="${solarStep === 4 ? '#fbbf24' : '#1e293b'}" opacity="${solarStep === 4 ? 0.6 + solarIntensity/150 : 1}" />
+                                            <path d="M 8 45 L 50 10 L 92 45" fill="none" stroke="${solarStep >= 4 ? '#10b981' : '#334155'}" stroke-width="5" stroke-linecap="round" />
+                                            ${solarStep === 4 ? `<g transform="translate(50, -35)"><circle r="20" fill="#10b981" opacity="0.3"><animate attributeName="r" values="15;25;15" dur="2s" repeatCount="indefinite"/></circle><text x="0" y="5" text-anchor="middle" fill="${solarIntensity > 40 ? '#fbbf24' : '#fff'}" font-size="20">💡</text></g>` : ''}
+                                        </g>
+                                    </svg>
+                                </div>
+                                <div class="solar-slider-float">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1cqh;">
+                                        <span style="font-size:1.2cqh; font-weight:900; color:rgba(255,255,255,0.8); text-transform:uppercase; letter-spacing:1px;">☀️ Intensitas</span>
+                                        <span style="font-size:1.8cqh; font-weight:900; color:#fbbf24;">${solarIntensity}%</span>
+                                    </div>
+                                    <input type="range" min="10" max="100" value="${solarIntensity}" oninput="window.updateSolarIntensity(this.value)" class="solar-custom-slider">
+                                </div>
+                            </div>
+                            <div class="solar-sidebar">
+                                <div class="solar-step-tracker">${[1,2,3,4].map(i => `<div class="solar-step-circle ${solarStep === i ? 'active' : ''}">${i}</div>`).join('')}</div>
+                                <div style="margin-top:2cqh;">
+                                    <div style="display:inline-block; padding:.4cqh 1.2cqw; border-radius:2cqh; font-size:1cqh; font-weight:900; text-transform:uppercase; letter-spacing:1px; color:white; background:${current.color}; margin-bottom:1cqh;">${current.sub}</div>
+                                    <h2 style="font-size:3cqh; font-weight:900; color:#0f172a; line-height:1.1; margin-bottom:1cqh;">${current.title}</h2>
+                                    <p style="font-size:1.6cqh; color:#475569; font-weight:500; line-height:1.4;">${current.desc}</p>
+                                </div>
+                                <div class="solar-data-grid">
+                                    <div class="solar-data-box"><div style="font-size:1cqh; font-weight:900; color:#64748b; text-transform:uppercase; margin-bottom:.5cqh;">${current.metric}</div><div style="font-size:2.5cqh; font-weight:900; color:#0f172a;">${val} <span style="font-size:1.2cqh; color:#64748b;">${current.unit}</span></div></div>
+                                    <div class="solar-data-box"><div style="font-size:1cqh; font-weight:900; color:#64748b; text-transform:uppercase; margin-bottom:.5cqh;">Produksi</div><div style="font-size:2.5cqh; font-weight:900; color:#059669;">${(solarIntensity * 2.15).toFixed(0)} <span style="font-size:1.2cqh; color:#64748b;">Wh</span></div></div>
+                                </div>
+                                <div style="background:white; padding:1.5cqh; border-radius:1.5cqh; border:1px solid #e2e8f0; display:flex; gap:1cqw; align-items:center; margin-top:2cqh; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+                                    <div style="width:4cqh; height:4cqh; border-radius:1cqh; background:${current.color}; display:flex; align-items:center; justify-content:center; color:white; font-size:2cqh; flex-shrink:0;">ℹ️</div>
+                                    <div><div style="font-size:1cqh; font-weight:900; color:#94a3b8; text-transform:uppercase; margin-bottom:.2cqh;">Deep Fact</div><div style="font-size:1.2cqh; color:#334155; font-style:italic;">"${current.fact}"</div></div>
+                                </div>
+                                <button class="solar-btn" style="background:${current.color};" onclick="window.nextSolarStep()">${solarStep === 4 ? "🔄 Ulangi Simulasi" : "Fase Berikutnya ➔"}</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }catch(e){}
+        }
+
+        window.updateSolarIntensity = function(val) { try { solarIntensity = parseInt(val); updateSolarSimUI(); }catch(e){} }
+        window.nextSolarStep = function() { 
+            try { 
+                if(typeof playClickSound === "function") playClickSound(); 
+                isTransitioning = true;
+                updateSolarSimUI();
+                setTimeout(() => {
+                    solarStep = solarStep < 4 ? solarStep + 1 : 1; 
+                    isTransitioning = false;
+                    updateSolarSimUI();
+                }, 400);
+            }catch(e){} 
+        }
+
+        // --- 2. SIMULATOR ANGIN (DIPERBAIKI 100% 16:9 DAN BEBAS ZOOM) ---
+        function updateWindSimUI() {
+            try {
+                document.getElementById('visual-area').innerHTML = `
+                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #0f172a;">
+                        <div style="position: relative; width: 100%; max-height: 100%; aspect-ratio: 16/9; background: linear-gradient(180deg, #0f172a 0%, #1e3a8a 50%, #38bdf8 100%); overflow: hidden; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+                            
+                            <div style="position: absolute; top: 5%; right: 10%; width: 15%; aspect-ratio: 1; border-radius: 50%; background: #dbeafe; opacity: 0.2; filter: blur(20px);"></div>
+                            <div style="position: absolute; top: 8%; right: 12%; width: 5%; aspect-ratio: 1; border-radius: 50%; background: #ffffff; opacity: 0.9; filter: blur(3px); box-shadow: 0 0 40px #bae6fd;"></div>
+                            
+                            <svg viewBox="0 0 1600 900" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%; z-index: 10; opacity: 0.6; pointer-events: none;">
+                                <defs>
+                                    <linearGradient id="hill1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#0f766e" /><stop offset="100%" stop-color="#042f2e" /></linearGradient>
+                                    <linearGradient id="hill2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#10b981" /><stop offset="100%" stop-color="#064e3b" /></linearGradient>
+                                    <linearGradient id="ground" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#059669" /><stop offset="100%" stop-color="#022c22" /></linearGradient>
+                                </defs>
+                                <path d="M0,500 Q300,400 600,520 T1200,480 T1600,550 L1600,900 L0,900 Z" fill="url(#hill1)" opacity="0.6"/>
+                                <path d="M-100,580 Q400,480 800,600 T1600,550 L1600,900 L-100,900 Z" fill="url(#hill2)" opacity="0.8"/>
+                                <path d="M0,650 C500,620 1000,680 1600,640 L1600,900 L0,900 Z" fill="url(#ground)"/>
+                                <path d="M 400,650 L 1350,680" stroke="#020617" stroke-width="6" fill="none" />
+                                <path d="M 800,660 L 1350,680" stroke="#020617" stroke-width="8" fill="none" />
+                                <path d="M 1150,670 L 1350,680" stroke="#020617" stroke-width="10" fill="none" />
+                                <path id="cable-1" d="M 400,650 L 1350,680" stroke-width="3" class="energy-flow-premium" />
+                                <path id="cable-2" d="M 800,660 L 1350,680" stroke-width="4" class="energy-flow-premium" />
+                                <path id="cable-3" d="M 1150,670 L 1350,680" stroke-width="5" class="energy-flow-premium" />
+                            </svg>
+                            
+                            <canvas id="wind-canvas" style="position: absolute; inset: 0; width: 100%; height: 100%; z-index: 10; opacity: 0.4; pointer-events: none;"></canvas>
+                            
+                            <div id="cloud-1" style="position: absolute; z-index: 10; width: 15%; top: 15%; left: 10%;">
+                                <svg viewBox="0 0 200 100" style="filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5)); opacity:0.4;" fill="#e0f2fe"><path d="M40,70 A30,30 0 0,1 40,10 A40,40 0 0,1 110,20 A35,35 0 0,1 170,40 A30,30 0 0,1 170,100 L40,100 Z"/></svg>
+                            </div>
+                            <div id="cloud-2" style="position: absolute; z-index: 10; width: 20%; top: 25%; left: 60%;">
+                                <svg viewBox="0 0 200 100" style="filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3)); opacity:0.2;" fill="#ffffff"><path d="M40,70 A30,30 0 0,1 40,10 A40,40 0 0,1 110,20 A35,35 0 0,1 170,40 A30,30 0 0,1 170,100 L40,100 Z"/></svg>
+                            </div>
+                            
+                            <div style="position: absolute; z-index: 20; bottom: 30%; left: 25%; height: 35%; width: 1.5%;">
+                                <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 300%; aspect-ratio: 2/1; background: linear-gradient(to bottom, #ffffff, #9ca3af); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 10;"></div>
+                                <div style="position: absolute; top: 10%; bottom: 0; width: 100%; background: linear-gradient(90deg, #94a3b8 0%, #f1f5f9 30%, #64748b 100%); clip-path: polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%); box-shadow: 5px 0 15px rgba(0,0,0,0.3);"></div>
+                                <svg class="rotor" id="rotor-1" viewBox="-50 -50 100 100" style="position: absolute; transform: translate(-50%, -50%); z-index: 20; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); width: 1800%; left: 50%; top: 10%;">
+                                    <g stroke="#64748b" stroke-width="0.2"><path d="M 0,-2 C 3,-15 3,-40 0,-48 C -3,-40 -3,-15 0,-2 Z" fill="#ffffff"/><path d="M 0,-2 C 3,-15 3,-40 0,-48 C -3,-40 -3,-15 0,-2 Z" fill="#ffffff" transform="rotate(120)"/><path d="M 0,-2 C 3,-15 3,-40 0,-48 C -3,-40 -3,-15 0,-2 Z" fill="#ffffff" transform="rotate(240)"/><circle cx="0" cy="0" r="3" fill="#cbd5e1" stroke="#475569" stroke-width="0.5"/></g>
+                                </svg>
+                            </div>
+                            
+                            <div style="position: absolute; z-index: 20; bottom: 26%; left: 50%; height: 45%; width: 2%;">
+                                <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 300%; aspect-ratio: 2/1; background: linear-gradient(to bottom, #ffffff, #9ca3af); border-radius: 50%; box-shadow: 0 5px 12px rgba(0,0,0,0.5); z-index: 10;"></div>
+                                <div style="position: absolute; top: 10%; bottom: 0; width: 100%; background: linear-gradient(90deg, #94a3b8 0%, #f1f5f9 30%, #64748b 100%); clip-path: polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%); box-shadow: 5px 0 15px rgba(0,0,0,0.3);"></div>
+                                <svg class="rotor" id="rotor-2" viewBox="-50 -50 100 100" style="position: absolute; transform: translate(-50%, -50%); z-index: 20; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.6)); width: 1800%; left: 50%; top: 10%;">
+                                    <g stroke="#94a3b8" stroke-width="0.3"><path d="M 0,-2 C 4,-15 4,-40 0,-48 C -4,-40 -4,-15 0,-2 Z" fill="#f8fafc"/><path d="M 0,-2 C 4,-15 4,-40 0,-48 C -4,-40 -4,-15 0,-2 Z" fill="#f8fafc" transform="rotate(120)"/><path d="M 0,-2 C 4,-15 4,-40 0,-48 C -4,-40 -4,-15 0,-2 Z" fill="#f8fafc" transform="rotate(240)"/><circle cx="0" cy="0" r="3.5" fill="#e2e8f0" stroke="#475569" stroke-width="0.5"/></g>
+                                </svg>
+                            </div>
+                            
+                            <div style="position: absolute; z-index: 20; bottom: 22%; left: 75%; height: 55%; width: 2.5%;">
+                                <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 300%; aspect-ratio: 2/1; background: linear-gradient(to bottom, #ffffff, #6b7280); border-radius: 50%; box-shadow: 0 6px 15px rgba(0,0,0,0.6); z-index: 10;"></div>
+                                <div style="position: absolute; top: 10%; bottom: 0; width: 100%; background: linear-gradient(90deg, #94a3b8 0%, #f1f5f9 30%, #64748b 100%); clip-path: polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%); box-shadow: 8px 0 20px rgba(0,0,0,0.4);"></div>
+                                <svg class="rotor" id="rotor-3" viewBox="-50 -50 100 100" style="position: absolute; transform: translate(-50%, -50%); z-index: 20; filter: drop-shadow(0 15px 20px rgba(0,0,0,0.8)); width: 1800%; left: 50%; top: 10%;">
+                                    <g stroke="#cbd5e1" stroke-width="0.3"><path d="M 0,-3 C 5,-15 5,-40 0,-48 C -5,-40 -5,-15 0,-3 Z" fill="#ffffff"/><path d="M 0,-3 C 5,-15 5,-40 0,-48 C -5,-40 -5,-15 0,-3 Z" fill="#ffffff" transform="rotate(120)"/><path d="M 0,-3 C 5,-15 5,-40 0,-48 C -5,-40 -5,-15 0,-3 Z" fill="#ffffff" transform="rotate(240)"/><circle cx="0" cy="0" r="4.5" fill="#f1f5f9" stroke="#334155" stroke-width="1"/></g>
+                                </svg>
+                            </div>
+                            
+                            <div style="position: absolute; z-index: 30; bottom: 25%; left: 88%; width: 10%; height: 15%;">
+                                <div style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: flex-end;">
+                                    <div style="width: 105%; height: 10%; background: #94a3b8; border-radius: 2px 2px 0 0; margin-left: -2.5%; z-index: 20; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-bottom: 1px solid #475569;"></div>
+                                    <div style="width: 100%; height: 100%; background: #1e293b; border-left: 2px solid #0f172a; border-right: 2px solid #0f172a; display: flex; gap: 2%; padding: 2%; box-shadow: inset 0 5px 20px rgba(0,0,0,0.8); z-index: 10;">
+                                        <div style="flex: 1; background: #020617; border-radius: 2px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end;">
+                                            <div class="bess-fill" style="width: 100%; background: #10b981; box-shadow: 0 0 8px #10b981; transition: all 0.3s; height: 0%;"></div>
+                                        </div>
+                                        <div style="flex: 1; background: #020617; border-radius: 2px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end;">
+                                            <div class="bess-fill" style="width: 100%; background: #10b981; box-shadow: 0 0 8px #10b981; transition: all 0.3s; height: 0%;"></div>
+                                        </div>
+                                        <div style="flex: 1; background: #020617; border-radius: 2px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end;">
+                                            <div class="bess-fill" style="width: 100%; background: #10b981; box-shadow: 0 0 8px #10b981; transition: all 0.3s; height: 0%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="position: absolute; bottom: 2%; left: 2%; right: 2%; height: 20%; border-radius: 1cqh; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); border-top: 1px solid rgba(255, 255, 255, 0.1); border-bottom: 1px solid rgba(0, 0, 0, 0.8); box-shadow: 0 -5px 20px rgba(0,0,0,0.5); display: flex; flex-direction: column; padding: 1% 2%; justify-content: space-between; z-index: 40; color: #e2e8f0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(71, 85, 105, 0.5); padding-bottom: 0.5%;">
+                                    <h1 style="font-size: 1.5cqh; font-weight: 900; letter-spacing: 1px; color: white; display: flex; align-items: center; gap: 0.5vw;">
+                                        <svg style="width:1.5cqh; height:1.5cqh; color:#22d3ee;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> 
+                                        WIND ENERGY SIMULATOR
+                                    </h1>
+                                    <div style="display:flex; align-items:center; gap:0.5vw;">
+                                        <div id="status-indicator" style="width:1cqh; height:1cqh; border-radius:50%; background:#64748b;"></div>
+                                        <span id="turbine-status" style="font-size:1.2cqh; font-weight:bold; letter-spacing:1px; color:#94a3b8;">STANDBY</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; height: 100%; align-items: center; justify-content: space-between; padding-top: 1%; gap: 2vw;">
+                                    <div style="flex:1; display:flex; flex-direction:column; background:rgba(15, 23, 42, 0.5); padding:1%; border-radius:1cqh; border:1px solid rgba(51, 65, 85, 0.5);">
+                                        <span style="font-size:1.2cqh; color:#94a3b8; font-weight:bold; text-transform:uppercase;">Power Output</span>
+                                        <div style="display:flex; align-items:baseline; gap:0.5vw;">
+                                            <span style="font-size:3.5cqh; font-weight:900; color:#22d3ee; font-family:monospace;" id="power-output">0</span>
+                                            <span style="font-size:1.5cqh; font-weight:bold; color:#0891b2;">kW</span>
+                                        </div>
+                                    </div>
+                                    <div style="flex:1.5; position:relative; overflow:hidden; display:flex; flex-direction:column; background:rgba(15, 23, 42, 0.5); padding:1%; border-radius:1cqh; border:1px solid rgba(51, 65, 85, 0.5);">
+                                        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:0.5cqh;">
+                                            <span style="font-size:1.2cqh; color:#94a3b8; font-weight:bold; text-transform:uppercase;">Battery Capacity</span>
+                                            <span style="font-size:2cqh; font-weight:900; color:#34d399; font-family:monospace;"><span id="battery-percentage">0.0</span>%</span>
+                                        </div>
+                                        <div style="width:100%; height:1cqh; background:#020617; border-radius:0.5cqh; border:1px solid #1e293b; position:relative; overflow:hidden;">
+                                            <div id="ui-battery-fill" style="height:100%; background:linear-gradient(90deg, #059669, #34d399); width:0%; transition:width 0.2s;"></div>
+                                        </div>
+                                    </div>
+                                    <div style="flex:1.5; background:rgba(30, 41, 59, 0.8); border:1px solid #475569; padding: 1%; border-radius: 1cqh;">
+                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1cqh;">
+                                            <span style="font-size:1.2cqh; color:#cbd5e1; font-weight:bold; text-transform:uppercase;">Wind Speed</span>
+                                            <div style="background:#020617; padding:0.2cqh 0.5vw; border-radius:0.5cqh; border:1px solid #334155;">
+                                                <span style="font-size:2cqh; font-weight:900; color:white; font-family:monospace;" id="wind-value">5.0</span>
+                                                <span style="font-size:1.2cqh; color:#94a3b8; margin-left:0.2vw;">m/s</span>
+                                            </div>
+                                        </div>
+                                        <input type="range" class="wind-premium-slider" id="wind-slider" min="0" max="35" step="0.1" value="5">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                startWindSimulation();
+            } catch(e){}
+        }
+
+        function startWindSimulation() {
+            if(windAnimId) cancelAnimationFrame(windAnimId);
+            try {
+                const windSlider = document.getElementById('wind-slider'); const windValue = document.getElementById('wind-value'); const powerOutput = document.getElementById('power-output'); const turbineStatusText = document.getElementById('turbine-status'); const statusIndicator = document.getElementById('status-indicator'); const batteryPercentageEl = document.getElementById('battery-percentage'); const uiBatteryFill = document.getElementById('ui-battery-fill'); const rotors = document.querySelectorAll('.rotor'); const bessFills = document.querySelectorAll('.bess-fill');
+                let currentWindSpeed = parseFloat(windSlider.value); let currentRpm = 0; let currentPower = 0; let displayPower = 0; let totalEnergy = 0; const BATTERY_CAPACITY = 10000; let bladeAngles = [0, 45, 90]; let lastTime = performance.now();
+                const canvas = document.getElementById('wind-canvas'); if(!canvas) return; const ctx = canvas.getContext('2d'); let windParticles = [];
+                function resizeCanvas() { if(!canvas) return; canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; } window.addEventListener('resize', resizeCanvas); resizeCanvas();
+                for (let i = 0; i < 100; i++) { windParticles.push({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, length: Math.random() * 80 + 40, opacity: Math.random() * 0.15 + 0.05, speedFactor: Math.random() * 0.4 + 0.6 }); }
+                const clouds = [{ el: document.getElementById('cloud-1'), x: 10, baseSpeed: 0.5 }, { el: document.getElementById('cloud-2'), x: 60, baseSpeed: 0.3 }];
+
+                function updateSimulation(dt) {
+                    currentWindSpeed = parseFloat(windSlider.value); windValue.innerText = currentWindSpeed.toFixed(1);
+                    let targetRpm = 0; let targetPower = 0;
+                    if (currentWindSpeed < 3) { turbineStatusText.innerText = "STANDBY"; turbineStatusText.style.color = "#94a3b8"; statusIndicator.style.background = "#64748b"; statusIndicator.style.boxShadow = "none"; targetRpm = 0; } 
+                    else if (currentWindSpeed > 25) { turbineStatusText.innerText = "BRAKED (STORM)"; turbineStatusText.style.color = "#f87171"; statusIndicator.style.background = "#ef4444"; statusIndicator.style.boxShadow = "0 0 8px #ef4444"; targetRpm = 0; } 
+                    else { 
+                        if (currentWindSpeed <= 12) { turbineStatusText.innerText = "GENERATING"; turbineStatusText.style.color = "#22d3ee"; statusIndicator.style.background = "#22d3ee"; statusIndicator.style.boxShadow = "0 0 8px #22d3ee"; targetRpm = (currentWindSpeed - 2) * 2; targetPower = Math.pow((currentWindSpeed / 12), 3) * 2000; } 
+                        else { turbineStatusText.innerText = "MAX RATED"; turbineStatusText.style.color = "#60a5fa"; statusIndicator.style.background = "#3b82f6"; statusIndicator.style.boxShadow = "0 0 8px #3b82f6"; targetRpm = 20; targetPower = 2000; } 
+                    }
+                    currentRpm += (targetRpm - currentRpm) * (dt * 0.5); if (Math.abs(currentRpm) < 0.1) currentRpm = 0;
+                    if (targetRpm > 0) { currentPower = targetPower * (currentRpm / targetRpm); } else { currentPower *= (1 - dt * 1.5); } if (currentPower < 1) currentPower = 0;
+                    displayPower += (currentPower - displayPower) * (dt * 5); powerOutput.innerText = Math.round(displayPower).toLocaleString('id-ID');
+                    if (currentPower > 0 && totalEnergy < BATTERY_CAPACITY) { totalEnergy += currentPower * (dt / 4); if (totalEnergy > BATTERY_CAPACITY) totalEnergy = BATTERY_CAPACITY; }
+                    let batteryPercent = (totalEnergy / BATTERY_CAPACITY) * 100; batteryPercentageEl.innerText = batteryPercent.toFixed(1);
+                    uiBatteryFill.style.width = batteryPercent + '%'; bessFills.forEach(fill => fill.style.height = batteryPercent + '%');
+                }
+
+                function renderWind(dt) { ctx.clearRect(0, 0, canvas.width, canvas.height); if (currentWindSpeed < 1) return; ctx.lineWidth = 1; ctx.lineCap = 'round'; windParticles.forEach(p => { ctx.beginPath(); let alpha = p.opacity * Math.min((currentWindSpeed / 20), 1); ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`; ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + p.length, p.y); ctx.stroke(); p.x += (currentWindSpeed * p.speedFactor * dt * 50); if (p.x > canvas.width) { p.x = -p.length; p.y = Math.random() * (canvas.height * 0.8); } }); }
+
+                function animate(time) {
+                    if(!document.getElementById('wind-canvas')) return; 
+                    let dt = (time - lastTime) / 1000; if (dt > 0.1) dt = 0.1; lastTime = time;
+                    updateSimulation(dt); renderWind(dt);
+                    rotors.forEach((rotor, i) => { let perspectiveSpeed = (i === 2) ? 1 : (i === 1 ? 0.9 : 0.8); bladeAngles[i] = (bladeAngles[i] + currentRpm * dt * 15 * perspectiveSpeed) % 360; rotor.style.transform = `translate(-50%, -50%) rotate(${bladeAngles[i]}deg)`; });
+                    clouds.forEach(cloud => { cloud.x += (currentWindSpeed * 0.02 + cloud.baseSpeed) * dt * 2; if (cloud.x > 110) cloud.x = -30; cloud.el.style.left = cloud.x + '%'; });
+                    windAnimId = requestAnimationFrame(animate);
+                }
+                windAnimId = requestAnimationFrame(animate);
+            } catch(e){}
+        }
+
+        // --- 3. SIMULATOR GEOTHERMAL (V2 PREMIUM DESIGN) ---
+        let geoState = { heat: 20, valve: false, temp: 80, pressure: 0, rpm: 0, power: 0 };
+        function updateGeoSimUI() {
+            try {
+                document.getElementById('visual-area').innerHTML = `
+                    <div class="geo-bg" style="background:#0a0f18;">
+                        <div class="geo-hud-header"><h1 class="geo-hud-title">Sistem Geotermal</h1></div>
+                        <div class="geo-info-panel" style="top: 15cqh !important;">
+                            <h3 style="font-size:1.2cqh; color:#94a3b8; font-weight:bold; letter-spacing:1px; text-transform:uppercase; margin-bottom:1cqh;">Proses</h3>
+                            <ul style="font-size:1.4cqh; color:#cbd5e1; list-style:none; padding:0; margin:0; line-height:1.6;">
+                                <li style="margin-bottom:.5cqh;"><span style="color:#22d3ee;">1.</span> Magma memanaskan air tanah.</li>
+                                <li style="margin-bottom:.5cqh;"><span style="color:#22d3ee;">2.</span> Uap bertekanan mengalir ke atas.</li>
+                                <li style="margin-bottom:.5cqh;"><span style="color:#22d3ee;">3.</span> Uap memutar turbin generator.</li>
+                                <li><span style="color:#22d3ee;">4.</span> Air didinginkan & disuntik ulang.</li>
+                            </ul>
+                        </div>
+
+                        <div class="geo-svg-wrapper">
+                            <svg viewBox="0 0 1280 720" preserveAspectRatio="xMidYMid slice" style="width:100%; height:100%;" id="geo-svg">
+                                <defs>
+                                    <linearGradient id="earthTop" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#29211c" /><stop offset="100%" stop-color="#1a1411" /></linearGradient>
+                                    <linearGradient id="earthDeep" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#1a1411" /><stop offset="100%" stop-color="#0a0807" /></linearGradient>
+                                    <linearGradient id="pipe" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#334155" /><stop offset="50%" stop-color="#64748b" /><stop offset="100%" stop-color="#1e293b" /></linearGradient>
+                                    <filter id="glowC"><feGaussianBlur stdDeviation="4" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                                </defs>
+                                
+                                <rect x="0" y="220" width="1280" height="150" fill="url(#earthTop)" />
+                                <path d="M0 220 Q 320 200, 640 230 T 1280 210 L 1280 370 L 0 370 Z" fill="#241c17" opacity="0.5" />
+                                <rect x="0" y="370" width="1280" height="350" fill="url(#earthDeep)" />
+
+                                <path id="geo-magma-path" d="M -100 480 Q 300 380, 640 430 T 1380 400 L 1380 720 L -100 720 Z" fill="hsl(18, 100%, 40%)" class="magma-glow-geo" style="transition: fill 1s; --magma-color: hsl(18, 100%, 40%);"/>
+                                
+                                <path id="geo-water-path" d="M 150 360 Q 350 310, 550 330 T 900 360 Q 950 420, 850 440 T 350 460 Q 100 430, 150 360 Z" fill="rgb(28, 163, 236)" style="transition: fill 1s;"/>
+                                
+                                <g id="geo-bubbles" stroke="#7dd3fc" stroke-width="2" stroke-dasharray="1 10" stroke-linecap="round" opacity="0" style="transition: opacity 0.5s;">
+                                    <line x1="300" y1="430" x2="300" y2="370" class="animate-flow-geo" style="--flow-speed: 1.5s;" />
+                                    <line x1="400" y1="440" x2="400" y2="350" class="animate-flow-geo" style="--flow-speed: 1.2s;" />
+                                    <line x1="550" y1="430" x2="550" y2="350" class="animate-flow-geo" style="--flow-speed: 0.8s;" />
+                                    <line x1="650" y1="430" x2="650" y2="360" class="animate-flow-geo" style="--flow-speed: 1.8s;" />
+                                    <line x1="750" y1="420" x2="750" y2="380" class="animate-flow-geo" style="--flow-speed: 1.5s;" />
+                                </g>
+
+                                <g><rect x="330" y="220" width="20" height="150" fill="#64748b" stroke="#334155" stroke-width="2" /><line id="geo-pipe-up" x1="340" y1="370" x2="340" y2="220" stroke="#bae6fd" stroke-width="10" stroke-dasharray="10 10" class="animate-flow-geo" filter="url(#glowC)" style="opacity:0;" /><text x="210" y="320" fill="#e2e8f0" font-size="12" font-weight="bold">SUMUR PRODUKSI</text></g>
+                                <g><rect x="650" y="250" width="20" height="140" fill="#64748b" stroke="#334155" stroke-width="2" /><line id="geo-pipe-down" x1="660" y1="250" x2="660" y2="390" stroke="#3b82f6" stroke-width="10" stroke-dasharray="10 10" class="animate-flow-geo" style="opacity:0;" /><text x="680" y="330" fill="#e2e8f0" font-size="12" font-weight="bold">SUMUR INJEKSI</text></g>
+
+                                <path d="M 250 150 L 500 150 L 520 250 L 230 250 Z" fill="#94a3b8" stroke="#475569" stroke-width="3" />
+                                <rect x="280" y="80" width="200" height="36" rx="6" fill="#cbd5e1" stroke="#475569" stroke-width="2" /><text x="305" y="104" fill="#334155" font-size="14" font-weight="bold">GEDUNG PEMBANGKIT</text>
+                                
+                                <path d="M 340 220 L 340 180" stroke="#64748b" stroke-width="16" />
+                                <line id="geo-pipe-turb" x1="340" y1="220" x2="340" y2="180" stroke="#bae6fd" stroke-width="8" stroke-dasharray="10 10" class="animate-flow-geo" filter="url(#glowC)" style="opacity:0;" />
+
+                                <g transform="translate(340, 180)">
+                                    <path d="M -30 0 L 30 0 L 40 40 L -40 40 Z" fill="#64748b" />
+                                    <g id="geo-rotor" class="animate-spin-custom" style="--spin-speed: 0s;">
+                                        <circle cx="0" cy="0" r="8" fill="#1e293b" />
+                                        <path d="M -4 -25 L 4 -25 L 8 -5 L -8 -5 Z" fill="#f8fafc" /><path d="M -4 25 L 4 25 L 8 5 L -8 5 Z" fill="#f8fafc" />
+                                        <path d="M -25 -4 L -25 4 L -5 8 L -5 -8 Z" fill="#f8fafc" /><path d="M 25 -4 L 25 4 L 5 8 L 5 -8 Z" fill="#f8fafc" />
+                                    </g>
+                                    <path d="M -35 0 C -35 -40, 35 -40, 35 0 Z" fill="#64748b" fill-opacity="0.8" stroke="#1e293b" />
+                                    <text x="-22" y="-45" fill="#1e293b" font-size="12" font-weight="bold">TURBIN</text>
+                                </g>
+
+                                <rect x="370" y="176" width="50" height="8" fill="#334155" />
+                                <g transform="translate(420, 160)"><text x="0" y="-10" fill="#047857" font-size="12" font-weight="bold">GENERATOR</text><rect x="0" y="0" width="70" height="40" rx="5" fill="#059669" stroke="#047857" stroke-width="2" /><rect x="10" y="10" width="50" height="20" fill="#10b981" /></g>
+
+                                <g transform="translate(620, 80)">
+                                    <text x="10" y="-15" fill="#334155" font-size="12" font-weight="bold">PENDINGIN</text>
+                                    <path d="M 20 0 C 30 60, 10 120, 0 170 L 80 170 C 70 120, 50 60, 60 0 Z" fill="#94a3b8" stroke="#64748b" stroke-width="3" />
+                                    <ellipse cx="40" cy="0" rx="20" ry="8" fill="#cbd5e1" stroke="#64748b" stroke-width="2" />
+                                    <g id="geo-smoke" opacity="0">
+                                        <circle cx="50" cy="-10" r="14" fill="#cbd5e1" class="animate-cloud-geo1" filter="url(#glowC)" />
+                                        <circle cx="40" cy="-15" r="18" fill="#cbd5e1" class="animate-cloud-geo2" />
+                                        <circle cx="65" cy="-5" r="15" fill="#cbd5e1" class="animate-cloud-geo3" />
+                                    </g>
+                                </g>
+
+                                <path d="M 340 220 L 340 240 L 660 240 L 660 200" fill="none" stroke="#64748b" stroke-width="12" />
+                                <path id="geo-pipe-cool" d="M 340 220 L 340 240 L 660 240 L 660 200" fill="none" stroke="#bae6fd" stroke-width="6" stroke-dasharray="10 10" class="animate-flow-geo" style="opacity:0;" />
+
+                                <g transform="translate(900, 50)">
+                                    <text x="25" y="-10" fill="#475569" font-size="12" font-weight="bold">SUTET</text>
+                                    <path d="M 40 200 L 50 50 L 60 200 Z" fill="none" stroke="#64748b" stroke-width="3" />
+                                    <line x1="20" y1="100" x2="80" y2="100" stroke="#64748b" stroke-width="3" /><line x1="30" y1="70" x2="70" y2="70" stroke="#64748b" stroke-width="3" />
+                                    <path d="M -410 110 Q -200 150, 20 100" fill="none" stroke="#64748b" stroke-width="2" /><path d="M -410 130 Q -200 170, 20 100" fill="none" stroke="#64748b" stroke-width="2" />
+                                    <g id="geo-lightning" opacity="0" filter="url(#glowC)">
+                                        <path d="M -410 110 Q -200 150, 20 100" fill="none" stroke="#eab308" stroke-width="3" stroke-dasharray="15 30" class="animate-flow-geo" style="--flow-speed: 0.4s;" />
+                                        <path d="M -410 130 Q -200 170, 20 100" fill="none" stroke="#fde047" stroke-width="2" stroke-dasharray="15 30" class="animate-flow-geo" style="--flow-speed: 0.5s;" />
+                                    </g>
+                                </g>
+                            </svg>
+                        </div>
+                        
+                        <div class="geo-bottom-panel">
+                            <div class="geo-control-sec">
+                                <div>
+                                    <div style="display:flex; justify-content:space-between; margin-bottom:.5cqh;"><span style="font-size:1.2cqh; color:#cbd5e1; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">🔥 Aktivitas Magma</span><span style="font-size:1.4cqh; font-weight:bold; color:#fb923c;" id="geo-heat-val">20%</span></div>
+                                    <input type="range" class="geo-slider" id="geo-heat-slider" min="0" max="100" value="20" oninput="geoSetHeat(this.value)">
+                                </div>
+                                <button id="geo-valve-btn" class="geo-valve-btn geo-valve-closed" onclick="geoToggleValve()">BUKA KATUP UAP</button>
+                            </div>
+                            <div class="geo-stats-sec">
+                                <div class="geo-stat-box"><div class="geo-stat-label">Suhu Reservoir</div><div style="display:flex; align-items:baseline; gap:.5cqw;"><span class="geo-stat-val" style="color:#fb923c;" id="geo-temp-val">80</span><span style="font-size:1.2cqh; color:#94a3b8; font-weight:bold;">°C</span></div></div>
+                                <div class="geo-stat-box"><div class="geo-stat-label">Tekanan Uap</div><div style="display:flex; align-items:baseline; gap:.5cqw;"><span class="geo-stat-val" style="color:#22d3ee;" id="geo-press-val">0.0</span><span style="font-size:1.2cqh; color:#94a3b8; font-weight:bold;">BAR</span></div></div>
+                                <div class="geo-stat-box"><div class="geo-stat-label">Putaran Turbin</div><div style="display:flex; align-items:baseline; gap:.5cqw;"><span class="geo-stat-val" style="color:#e2e8f0;" id="geo-rpm-val">0</span><span style="font-size:1.2cqh; color:#94a3b8; font-weight:bold;">RPM</span></div></div>
+                                <div class="geo-stat-box"><div class="geo-stat-label">Daya Listrik</div><div style="display:flex; align-items:baseline; gap:.5cqw;"><span class="geo-stat-val" style="color:#facc15; text-shadow:0 0 10px rgba(250,204,21,0.5);" id="geo-power-val">0.0</span><span style="font-size:1.2cqh; color:#94a3b8; font-weight:bold;">MW</span></div></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                startGeoSimulation();
+            }catch(e){}
+        }
+
+        window.geoSetHeat = function(val) { try { geoState.heat = parseInt(val); document.getElementById('geo-heat-val').innerText = val + "%"; }catch(e){} }
+        window.geoToggleValve = function() { 
+            try {
+                geoState.valve = !geoState.valve; 
+                const btn = document.getElementById('geo-valve-btn');
+                if(geoState.valve) { btn.innerText = "TUTUP KATUP UAP"; btn.className = "geo-valve-btn geo-valve-open"; }
+                else { btn.innerText = "BUKA KATUP UAP"; btn.className = "geo-valve-btn geo-valve-closed"; }
+            }catch(e){}
+        }
+
+        function startGeoSimulation() {
+            if(geoAnimId) clearTimeout(geoAnimId);
+            try {
+                function loop() {
+                    if(!document.getElementById('geo-svg')) return; 
+
+                    let targetTemp = 40 + (geoState.heat * 3.1); geoState.temp += (targetTemp - geoState.temp) * 0.08;
+                    let targetPressure = geoState.temp > 100 ? (geoState.temp - 100) * 0.45 : 0;
+                    geoState.pressure = geoState.valve ? targetPressure * 0.85 : targetPressure;
+
+                    if (geoState.valve && geoState.pressure > 5) { geoState.rpm = geoState.pressure * 36; geoState.power = geoState.rpm * 0.015; } else { geoState.rpm = 0; geoState.power = 0; }
+
+                    document.getElementById('geo-temp-val').innerText = Math.round(geoState.temp); document.getElementById('geo-press-val').innerText = geoState.pressure.toFixed(1);
+                    document.getElementById('geo-rpm-val').innerText = Math.round(geoState.rpm); document.getElementById('geo-power-val').innerText = geoState.power.toFixed(1);
+
+                    let hue = 15 + (geoState.heat * 0.35); let int = 40 + (geoState.heat * 0.6);
+                    document.getElementById('geo-magma-path').style.fill = `hsl(${hue}, 100%, ${int}%)`; document.getElementById('geo-magma-path').style.setProperty('--magma-color', `hsl(${hue}, 100%, ${int}%)`);
+                    let boilF = Math.min(1, Math.max(0, (geoState.temp - 80) / 100)); document.getElementById('geo-water-path').style.fill = `rgb(${28 + boilF*180}, ${163 + boilF*50}, ${236 + boilF*19})`;
+
+                    document.getElementById('geo-bubbles').style.opacity = geoState.temp > 100 ? "0.6" : "0";
+                    let isFlowing = geoState.valve && geoState.rpm > 0;
+                    document.getElementById('geo-pipe-up').style.opacity = isFlowing ? "1" : "0"; document.getElementById('geo-pipe-turb').style.opacity = isFlowing ? "1" : "0";
+                    document.getElementById('geo-pipe-down').style.opacity = geoState.rpm > 0 ? "1" : "0"; document.getElementById('geo-pipe-cool').style.opacity = geoState.rpm > 0 ? "1" : "0";
+                    document.getElementById('geo-smoke').style.opacity = geoState.rpm > 0 ? "1" : "0"; document.getElementById('geo-lightning').style.opacity = geoState.power > 0 ? "1" : "0";
+
+                    let light = document.getElementById('geo-gen-light');
+                    if(light) {
+                        if(geoState.rpm > 0) { light.setAttribute('fill', '#10b981'); light.setAttribute('filter', 'url(#glowC)'); } else { light.setAttribute('fill', '#ef4444'); light.setAttribute('filter', ''); }
+                    }
+
+                    let spinDur = geoState.rpm > 0 ? Math.max(0.05, 2 - (geoState.rpm / 3600) * 1.95) : 0; let flowDur = geoState.rpm > 0 ? Math.max(0.1, 1.5 - (geoState.rpm / 3600) * 1.4) : 0;
+                    document.getElementById('geo-rotor').style.setProperty('--spin-speed', spinDur ? spinDur+'s' : '0s'); document.getElementById('geo-svg').style.setProperty('--flow-speed', flowDur ? flowDur+'s' : '0s');
+
+                    geoAnimId = setTimeout(loop, 100);
+                }
+                loop();
+            }catch(e){}
+        }
+
+        // --- 4. SIMULATOR PLTA (AIR) ---
+        let hydroState = { height: 50, gateOpen: 0, turbineAngle: 0, turbineRPM: 0, targetRPM: 0, powerOutput: 0, flowOffset: 0, waveOffset: 0, riverOffset: 0, clouds: [], particles: [], time: 0 };
+        function updateHydroSimUI() {
+            try {
+                document.getElementById('visual-area').innerHTML = `
+                    <div class="hydro-bg">
+                        <div class="hydro-dash">
+                            <div>
+                                <div class="hydro-dash-header"><div class="hydro-pulse"></div><h1 class="hydro-title">Sistem PLTA</h1></div>
+                                <p class="hydro-desc">Parameter Kendali Utama. Sesuaikan tinggi waduk dan katup penstock untuk mengatur output listrik generator.</p>
+                                <div class="hydro-control-box"><div class="hydro-control-head"><span class="hydro-control-label" style="color:#60a5fa;">Tinggi Air (m)</span><span id="hydro-h-val" class="hydro-control-val" style="color:#60a5fa;">50</span></div><input type="range" class="hydro-slider" id="hydro-h-slider" min="10" max="150" value="50" oninput="updateHydroPhysics()"></div>
+                                <div class="hydro-control-box"><div class="hydro-control-head"><span class="hydro-control-label" style="color:#22d3ee;">Bukaan Katup (%)</span><span id="hydro-m-val" class="hydro-control-val" style="color:#22d3ee;">0</span></div><input type="range" class="hydro-slider" id="hydro-m-slider" min="0" max="100" value="0" oninput="updateHydroPhysics()"></div>
+                            </div>
+                            <div class="hydro-stats-grid">
+                                <div class="hydro-stat-box" style="border: 1px solid #1e3a8a;"><div class="hydro-stat-label" style="color:#93c5fd;">Energi Potensial</div><div class="hydro-stat-val" style="color:#3b82f6;" id="hydro-ep-val">0.0</div></div>
+                                <div class="hydro-stat-box" style="border: 1px solid #7c2d12;"><div class="hydro-stat-label" style="color:#fdba74;">RPM Turbin</div><div class="hydro-stat-val" style="color:#f97316;" id="hydro-rpm-val">0</div></div>
+                                <div class="hydro-stat-box" style="grid-column: span 2; border: 2px solid rgba(6,95,70,0.5); background: #022c22; position:relative;"><div class="absolute inset-0" id="hydro-power-bg" style="background:#10b981; opacity:0;"></div><div class="hydro-stat-label" style="color:#34d399; position:relative; z-index:10;">Output SUTET (MW)</div><div class="hydro-stat-val" style="color:#34d399; font-size:3cqh; text-shadow:0 0 10px rgba(52,211,153,0.8); position:relative; z-index:10;" id="hydro-power-val">0.00</div></div>
+                            </div>
+                        </div>
+                        <div class="hydro-canvas-wrap"><canvas id="hydro-canvas" class="hydro-canvas"></canvas></div>
+                    </div>
+                `;
+                hydroState = { height: 50, gateOpen: 0, turbineAngle: 0, turbineRPM: 0, targetRPM: 0, powerOutput: 0, flowOffset: 0, waveOffset: 0, riverOffset: 0, clouds: [], particles: [], time: 0 };
+                for(let i=0; i<5; i++) hydroState.clouds.push({ x: Math.random() * 1920, y: 50 + Math.random() * 300, scale: 0.5 + Math.random() * 1, speed: 0.1 + Math.random() * 0.3 });
+                startHydroSimulation();
+            }catch(e){}
+        }
+
+        window.updateHydroPhysics = function() {
+            try {
+                hydroState.height = parseFloat(document.getElementById('hydro-h-slider').value);
+                hydroState.gateOpen = parseFloat(document.getElementById('hydro-m-slider').value);
+                
+                document.getElementById('hydro-h-val').innerText = hydroState.height;
+                document.getElementById('hydro-m-val').innerText = hydroState.gateOpen;
+
+                const GRAVITY = 9.8; const DENSITY = 1000; const MAX_FLOW = 200; const EFFICIENCY = 0.88;
+                let Q = MAX_FLOW * (hydroState.gateOpen / 100) * Math.sqrt(hydroState.height / 150);
+                let potentialPower = DENSITY * GRAVITY * Q * hydroState.height; 
+                hydroState.powerOutput = (potentialPower * EFFICIENCY) / 1000000; 
+
+                hydroState.targetRPM = (Q * 2.0); 
+                document.getElementById('hydro-ep-val').innerText = (potentialPower / 1000000).toFixed(1);
+                document.getElementById('hydro-power-bg').style.opacity = (hydroState.powerOutput > 0) ? (0.1 + (hydroState.powerOutput / 30) * 0.4) : 0;
+            }catch(e){}
+        }
+
+        function startHydroSimulation() {
+            if(hydroAnimId) cancelAnimationFrame(hydroAnimId);
+            try {
+                const canvas = document.getElementById('hydro-canvas'); if(!canvas) return; const ctx = canvas.getContext('2d');
+                function resizeCanvas() { if(!canvas) return; canvas.width = 1920; canvas.height = 1080; } 
+                window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+                function drawHydroLabel(text, x, y, tx, ty) {
+                    ctx.save(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 20); ctx.lineTo(tx, ty); ctx.stroke();
+                    ctx.fillStyle = '#0ea5e9'; ctx.beginPath(); ctx.arc(tx, ty, 5, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke();
+                    ctx.font = "600 18px 'Segoe UI', sans-serif"; const tWidth = ctx.measureText(text).width; const boxW = tWidth + 40; const boxH = 40;
+                    ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 10; ctx.fillStyle = 'rgba(15, 23, 42, 0.85)'; ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)'; ctx.lineWidth = 1.5;
+                    ctx.beginPath(); if(ctx.roundRect) { ctx.roundRect(x - boxW/2, y - boxH/2, boxW, boxH, 8); } else { ctx.fillRect(x - boxW/2, y - boxH/2, boxW, boxH); } ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+                    ctx.fillStyle = '#e0f2fe'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y); ctx.restore();
+                }
+
+                function drawHydro() {
+                    hydroState.time += 0.016; ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    let skyGradient = ctx.createLinearGradient(0, 0, 0, 800); skyGradient.addColorStop(0, '#0ea5e9'); skyGradient.addColorStop(1, '#e0f2fe'); ctx.fillStyle = skyGradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    let sun = ctx.createRadialGradient(1600, 200, 50, 1600, 200, 400); sun.addColorStop(0, 'rgba(255, 255, 255, 0.8)'); sun.addColorStop(1, 'rgba(255, 255, 255, 0)'); ctx.fillStyle = sun; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'; hydroState.clouds.forEach(c => { c.x -= c.speed; if(c.x < -300) c.x = canvas.width + 100; ctx.beginPath(); ctx.arc(c.x, c.y, 60 * c.scale, Math.PI * 0.5, Math.PI * 1.5); ctx.arc(c.x + 70 * c.scale, c.y - 40 * c.scale, 70 * c.scale, Math.PI * 1, Math.PI * 1.8); ctx.arc(c.x + 150 * c.scale, c.y - 20 * c.scale, 60 * c.scale, Math.PI * 1.2, Math.PI * 2); ctx.arc(c.x + 200 * c.scale, c.y, 50 * c.scale, Math.PI * 1.5, Math.PI * 0.5); ctx.fill(); });
+                    ctx.fillStyle = '#64748b'; ctx.beginPath(); ctx.moveTo(0, 800); ctx.quadraticCurveTo(300, 300, 700, 800); ctx.fill();
+                    let mtnGrad = ctx.createLinearGradient(0, 400, 0, 800); mtnGrad.addColorStop(0, '#334155'); mtnGrad.addColorStop(1, '#0f172a'); ctx.fillStyle = mtnGrad; ctx.beginPath(); ctx.moveTo(300, 800); ctx.quadraticCurveTo(800, 350, 1300, 800); ctx.fill();
+                    ctx.fillStyle = '#1e293b'; ctx.fillRect(0, 800, canvas.width, canvas.height - 800);
+
+                    const damX = 500; const baseY = 800; let mapY = 750 - ((hydroState.height - 10) / 140) * 450;
+                    let waterGrad = ctx.createLinearGradient(0, mapY, 0, baseY); waterGrad.addColorStop(0, 'rgba(14, 165, 233, 0.85)'); waterGrad.addColorStop(1, 'rgba(2, 132, 199, 0.95)');
+                    hydroState.waveOffset += 0.03; ctx.fillStyle = waterGrad; ctx.beginPath(); ctx.moveTo(0, baseY); ctx.lineTo(damX, baseY); ctx.lineTo(damX, mapY);
+                    for(let i=damX; i>=0; i-=20) { let wave = Math.sin((i * 0.03) + hydroState.waveOffset) * 6; ctx.lineTo(i, mapY + wave); } ctx.lineTo(0, mapY); ctx.closePath(); ctx.fill();
+                    ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 3; ctx.stroke();
+
+                    let damGrad = ctx.createLinearGradient(damX, 0, damX + 300, 0); damGrad.addColorStop(0, '#94a3b8'); damGrad.addColorStop(0.5, '#64748b'); damGrad.addColorStop(1, '#475569');
+                    ctx.fillStyle = damGrad; ctx.beginPath(); ctx.moveTo(damX, baseY); ctx.lineTo(damX, 250); ctx.lineTo(damX + 100, 250); ctx.lineTo(damX + 350, baseY); ctx.closePath(); ctx.fill();
+                    ctx.strokeStyle = '#475569'; ctx.lineWidth = 2; ctx.beginPath(); for(let y=300; y<800; y+=80) { let w = 100 + ((y-250)/550)*250; ctx.moveTo(damX, y); ctx.lineTo(damX + w, y); } ctx.stroke();
+
+                    ctx.lineWidth = 50; ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
+                    let pipeGrad = ctx.createLinearGradient(damX, 750, damX + 50, 700); pipeGrad.addColorStop(0, '#1e293b'); pipeGrad.addColorStop(0.5, '#64748b'); pipeGrad.addColorStop(1, '#1e293b'); ctx.strokeStyle = pipeGrad;
+                    ctx.beginPath(); ctx.moveTo(damX - 20, 750); ctx.lineTo(damX + 450, 950); ctx.stroke();
+
+                    if(hydroState.gateOpen > 0) {
+                        let thickness = (hydroState.gateOpen / 100) * 36; ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = thickness; ctx.save();
+                        hydroState.flowOffset -= (hydroState.turbineRPM * 0.15); ctx.setLineDash([40, 20]); ctx.lineDashOffset = hydroState.flowOffset;
+                        ctx.beginPath(); ctx.moveTo(damX + 10, 750); ctx.lineTo(damX + 430, 950); ctx.shadowColor = '#0ea5e9'; ctx.shadowBlur = 15; ctx.stroke(); ctx.restore();
+                    }
+                    ctx.fillStyle = '#b91c1c'; let gateY = 710 - (hydroState.gateOpen / 100) * 40; ctx.fillRect(damX - 10, gateY, 20, 80);
+                    ctx.fillStyle = '#475569'; ctx.fillRect(damX - 15, 650, 30, 60);
+
+                    const pX = 850; const tX = 1000; const tY = 950;
+                    ctx.fillStyle = '#475569'; ctx.fillRect(pX, 850, 350, 150);
+                    let wallGrad = ctx.createLinearGradient(pX, 0, pX + 350, 0); wallGrad.addColorStop(0, '#cbd5e1'); wallGrad.addColorStop(1, '#94a3b8'); ctx.fillStyle = wallGrad; ctx.fillRect(pX + 20, 700, 310, 150);
+                    ctx.fillStyle = '#38bdf8'; ctx.globalAlpha = 0.6; for(let i=0; i<3; i++) { ctx.fillRect(pX + 50 + (i*90), 730, 50, 80); ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.moveTo(pX + 50 + (i*90), 730); ctx.lineTo(pX + 100 + (i*90), 730); ctx.lineTo(pX + 50 + (i*90), 810); ctx.fill(); ctx.fillStyle = '#38bdf8'; } ctx.globalAlpha = 1.0;
+                    ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.moveTo(pX, 700); ctx.lineTo(pX + 175, 630); ctx.lineTo(pX + 350, 700); ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 2; ctx.beginPath(); for(let i=0; i<=350; i+=20) { ctx.moveTo(pX + i, 700); let peakY = 700 - (i < 175 ? i * (70/175) : (350-i) * (70/175)); ctx.lineTo(pX + i, peakY); } ctx.stroke();
+
+                    ctx.fillStyle = '#94a3b8'; ctx.fillRect(tX - 15, 830, 30, 90);
+                    let genGrad = ctx.createLinearGradient(tX - 70, 0, tX + 70, 0); genGrad.addColorStop(0, '#1e3a8a'); genGrad.addColorStop(0.5, '#3b82f6'); genGrad.addColorStop(1, '#1e3a8a'); ctx.fillStyle = genGrad;
+                    ctx.beginPath(); ctx.ellipse(tX, 770, 70, 20, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(tX - 70, 770, 140, 60); ctx.beginPath(); ctx.ellipse(tX, 830, 70, 20, 0, 0, Math.PI * 2); ctx.fill();
+                    ctx.shadowBlur = hydroState.powerOutput > 0 ? 15 : 0; ctx.shadowColor = '#10b981'; ctx.fillStyle = hydroState.powerOutput > 0 ? '#34d399' : '#64748b'; ctx.beginPath(); ctx.arc(tX, 800, 10, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+
+                    ctx.fillStyle = '#1e293b'; ctx.beginPath(); ctx.arc(tX, tY, 80, 0, Math.PI * 2); ctx.fill();
+                    ctx.save(); ctx.translate(tX, tY); hydroState.turbineRPM += (hydroState.targetRPM - hydroState.turbineRPM) * 0.05; hydroState.turbineAngle += (hydroState.turbineRPM * 0.02); ctx.rotate(hydroState.turbineAngle);
+                    ctx.fillStyle = '#f59e0b'; ctx.strokeStyle = '#b45309'; ctx.lineWidth = 2; for(let i=0; i<8; i++) { ctx.rotate(Math.PI / 4); ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(20, -30, 15, -70); ctx.quadraticCurveTo(-10, -50, -15, -70); ctx.quadraticCurveTo(-20, -30, 0, 0); ctx.fill(); ctx.stroke(); }
+                    ctx.fillStyle = '#e2e8f0'; ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+
+                    ctx.lineWidth = 50; let tailGrad = ctx.createLinearGradient(tX + 50, 950, tX + 150, 1000); tailGrad.addColorStop(0, '#1e293b'); tailGrad.addColorStop(0.5, '#475569'); tailGrad.addColorStop(1, '#0f172a'); ctx.strokeStyle = tailGrad; ctx.lineCap = 'butt';
+                    ctx.beginPath(); ctx.moveTo(tX + 50, tY); ctx.quadraticCurveTo(tX + 120, tY, tX + 150, 1020); ctx.stroke();
+
+                    const startX = 1150; const riverY = 1000; const bottomY = 1080;
+                    ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.moveTo(startX - 50, bottomY); ctx.lineTo(startX - 50, riverY); ctx.quadraticCurveTo(startX + 100, riverY + 30, canvas.width, riverY + 20); ctx.lineTo(canvas.width, bottomY); ctx.fill();
+                    ctx.fillStyle = '#1e293b'; const rocks = [[1250, 1060, 30], [1400, 1070, 40], [1650, 1050, 25], [1800, 1065, 35]]; rocks.forEach(r => { ctx.beginPath(); ctx.ellipse(r[0], r[1], r[2], r[2]/2, 0, 0, Math.PI*2); ctx.fill(); });
+                    let riverGrad = ctx.createLinearGradient(0, riverY, 0, bottomY); riverGrad.addColorStop(0, 'rgba(56, 189, 248, 0.7)'); riverGrad.addColorStop(1, 'rgba(3, 105, 161, 0.9)');
+                    hydroState.riverOffset -= (0.5 + (hydroState.turbineRPM * 0.01)); ctx.fillStyle = riverGrad; ctx.beginPath(); ctx.moveTo(startX - 30, riverY + 20);
+                    for(let x = startX - 30; x <= canvas.width + 50; x += 30) { let wave = Math.sin((x * 0.05) + hydroState.waveOffset * 2) * 4; ctx.lineTo(x, riverY + 20 + wave); } ctx.lineTo(canvas.width, bottomY); ctx.lineTo(startX - 30, bottomY); ctx.fill();
+                    ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 2; ctx.setLineDash([40, 60]); ctx.lineDashOffset = hydroState.riverOffset; for(let yLine = riverY + 35; yLine < bottomY - 10; yLine += 15) { ctx.beginPath(); ctx.moveTo(startX, yLine); ctx.lineTo(canvas.width, yLine); ctx.stroke(); } ctx.setLineDash([]);
+                    if(hydroState.gateOpen > 0) { ctx.fillStyle = 'rgba(224, 242, 254, 0.8)'; ctx.beginPath(); ctx.moveTo(1120, 1000); ctx.quadraticCurveTo(1170, 1020, 1250, riverY + 20); ctx.lineTo(1120, riverY + 30); ctx.fill(); }
+
+                    const sX = 1500; const sY = 850;
+                    ctx.strokeStyle = '#475569'; ctx.lineWidth = 8; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+                    ctx.beginPath(); ctx.moveTo(sX, 200); ctx.lineTo(sX - 100, sY); ctx.moveTo(sX, 200); ctx.lineTo(sX + 100, sY);
+                    const arms = [[350, 160], [500, 180]]; arms.forEach(a => { ctx.moveTo(sX - a[1], a[0]); ctx.lineTo(sX + a[1], a[0]); });
+                    ctx.lineWidth = 4; for(let y=250; y<800; y+=80) { let wTop = ((y - 200) / 650) * 100; let wBot = (((y+80) - 200) / 650) * 100; ctx.moveTo(sX - wTop, y); ctx.lineTo(sX + wBot, y+80); ctx.moveTo(sX + wTop, y); ctx.lineTo(sX - wBot, y+80); } ctx.stroke();
+                    ctx.fillStyle = '#cbd5e1'; arms.forEach(a => { [sX - a[1], sX + a[1]].forEach(ix => { ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(ix - 5, a[0], 10, 30, 5); else ctx.fillRect(ix - 5, a[0], 10, 30); ctx.fill(); }); });
+                    
+                    ctx.lineWidth = 4; const pts = [ {startX: 1000, startY: 770, endX: sX - 160, endY: 380}, {startX: 1000, startY: 770, endX: sX + 160, endY: 380}, {startX: 1000, startY: 770, endX: sX - 180, endY: 530} ];
+                    ctx.strokeStyle = '#0f172a'; ctx.shadowBlur = 0; pts.forEach(p => { ctx.beginPath(); ctx.moveTo(p.startX, p.startY); ctx.quadraticCurveTo((p.startX + p.endX)/2, Math.max(p.startY, p.endY) + 80, p.endX, p.endY); ctx.quadraticCurveTo(p.endX + 200, p.endY + 100, canvas.width + 50, p.endY); ctx.stroke(); });
+
+                    if(hydroState.powerOutput > 0) {
+                        ctx.strokeStyle = '#34d399'; ctx.shadowColor = '#10b981'; ctx.shadowBlur = 15; ctx.lineWidth = 3; ctx.setLineDash([15, 40]); let elecSpeed = -(hydroState.time * 100 * (hydroState.powerOutput / 50)); ctx.lineDashOffset = elecSpeed;
+                        pts.forEach(p => { ctx.beginPath(); ctx.moveTo(p.startX, p.startY); ctx.quadraticCurveTo((p.startX + p.endX)/2, Math.max(p.startY, p.endY) + 80, p.endX, p.endY); ctx.quadraticCurveTo(p.endX + 200, p.endY + 100, canvas.width + 50, p.endY); ctx.stroke(); });
+                        ctx.setLineDash([]); ctx.shadowBlur = 0;
+                    }
+
+                    if (hydroState.gateOpen > 0) { let num = Math.floor(hydroState.gateOpen / 15) + 1; for(let i=0; i<num; i++) { hydroState.particles.push({ x: 1150 + Math.random() * 20, y: 1010 + Math.random() * 20, vx: (Math.random() * 6 + 3) * (hydroState.gateOpen/50), vy: (Math.random() * -5) - 2, life: 1.0, size: Math.random() * 5 + 2 }); } }
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; for (let i = hydroState.particles.length - 1; i >= 0; i--) { let p = hydroState.particles[i]; p.x += p.vx; p.y += p.vy; p.vy += 0.4; p.life -= 0.03; p.size += 0.1; if (p.life <= 0 || p.y > 1080) { hydroState.particles.splice(i, 1); } else { ctx.globalAlpha = p.life; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); } } ctx.globalAlpha = 1.0;
+
+                    drawHydroLabel("1. Waduk Air", 250, 150, 250, mapY);
+                    drawHydroLabel("2. Penstock", 650, 550, 650, 800);
+                    drawHydroLabel("3. Turbin Air & Generator", 900, 600, 850, 800);
+                    drawHydroLabel("4. Tailrace", 1250, 900, 1150, 1000);
+                    drawHydroLabel("5. SUTET", 1500, 100, 1500, 350);
+
+                    let currPwr = parseFloat(document.getElementById('hydro-power-val').innerText); let lerpPwr = currPwr + (hydroState.powerOutput - currPwr) * 0.1;
+                    document.getElementById('hydro-power-val').innerText = lerpPwr.toFixed(2);
+                    document.getElementById('hydro-rpm-val').innerText = Math.round(hydroState.turbineRPM);
+
+                    hydroAnimId = requestAnimationFrame(drawHydro);
+                }
+                drawHydro();
+            }catch(e){}
+        }
+
+        function runSim(type, btn) {
+            try {
+                if(windAnimId) { cancelAnimationFrame(windAnimId); windAnimId = null; } 
+                if(geoAnimId) { clearTimeout(geoAnimId); geoAnimId = null; }
+                if(hydroAnimId) { cancelAnimationFrame(hydroAnimId); hydroAnimId = null; }
+
+                document.querySelectorAll('.sim-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
+                
+                if(type === 'surya') { solarStep = 1; updateSolarSimUI(); } 
+                else if(type === 'angin') { updateWindSimUI(); } 
+                else if(type === 'air') { updateHydroSimUI(); } 
+                else if(type === 'panasbumi') { updateGeoSimUI(); }
+            } catch(e){}
+        }function showKaryaDetail(type) {
+            if(typeof playClickSound === "function") playClickSound();
+            
+            // Mengambil elemen-elemen display
+            const area = document.getElementById('karya-detail-area');
+            const imgTag = document.getElementById('karya-peta-img');
+            const titleEl = document.getElementById('karya-title');
+            const matsEl = document.getElementById('karya-materials');
+            const stepsEl = document.getElementById('karya-steps');
+            
+            // Memunculkan area detail
+            if(area) area.style.display = 'block';
+            
+            // Database konten proyek
+            const data = {
+                'powerbank': { 
+                    title: 'POWER BANK SURYA', 
+                    img: 'assets/power.jpg', 
+                    mats: ['Panel Surya 5V', 'Modul TP4056', 'Baterai Li-ion 18650', 'Step-Up 5V'], 
+                    steps: ['Sambungkan panel ke modul TP4056.', 'Pasang baterai ke kutub B+/B-.', 'Hubungkan output ke USB Step-Up.'] 
+                },
+                'kipas': { 
+                    title: 'KIPAS SEL SURYA', 
+                    img: 'assets/kipas.jpg', 
+                    mats: ['Panel Surya 12V', 'Motor DC 6V', 'Baling-baling', 'Stand Kayu'], 
+                    steps: ['Rakit motor pada stand kayu.', 'Sambungkan kabel panel ke motor.', 'Jemur di matahari langsung.'] 
+                },
+                'peltier': { 
+                    title: 'LAMPU TERMOELEKTRIK', 
+                    img: 'assets/peltier.jpg', 
+                    mats: ['Modul Peltier TEC1', '2 Heatsink', 'Lampu LED 3V', 'Lilin & Es'], 
+                    steps: ['Jepit Peltier di antara heatsink.', 'Sambungkan kabel ke LED.', 'Beri panas lilin & es batu.'] 
+                }
+            };
+            
+            const p = data[type];
+            
+            // Update konten ke layar
+            if(p) {
+                if(imgTag) imgTag.src = p.img; 
+                if(titleEl) titleEl.innerHTML = `<span style="font-size: 3.5cqh; font-weight: 900; color: #00d2d3; display: block;">${p.title}</span>`;
+                if(matsEl) matsEl.innerHTML = p.mats.map(m => `<li style="margin-bottom: 0.5cqh;">${m}</li>`).join('');
+                if(stepsEl) stepsEl.innerHTML = p.steps.map(s => `<li style="margin-bottom: 0.8cqh; line-height: 1.2;">${s}</li>`).join('');
+            }
+        }
+        // FUNGSI UNTUK MEMUNCULKAN TULISAN
+       function tampilkanPesanFeedback(betul, level) {
+    // Pilih wadah v3 untuk level 3, atau v2 untuk level 2
+    const idWadah = (level === 3) ? 'instant-feedback-v3' : 'instant-feedback-v2';
+    const wadahPesan = document.getElementById(idWadah);
+    
+    if(wadahPesan) {
+        wadahPesan.style.display = 'block';
+        wadahPesan.innerText = betul ? "TEPAT! ✨" : "TIDAK TEPAT ❌";
+        wadahPesan.style.backgroundColor = betul ? "#05c46b" : "#ff3f34";
+        setTimeout(() => { wadahPesan.style.display = 'none'; }, 1000);
+    }
+}
+// --- LOGIKA SLIDER MATERI ---
+let currentSlide = 1;
+const totalSlides = 10;
+
+// Daftar Judul Slide (Sesuai gambar yang kamu kirim)
+const slideTitles = [
+    "Manifesto Transisi: Mengamankan Masa Depan",
+    "Mengapa Transisi Ini Mendesak?",
+    "Pergeseran Paradigma: Fosil vs Terbarukan",
+    "Hukum Kekekalan Energi: Mesin Transisi",
+    "Matriks Solusi: 6 Senjata Energi Terbarukan",
+    "Menangkap Pergerakan: Kelompok Kinetik",
+    "Cahaya dan Biologi: Alternatif Non-Kinetik",
+    "Keuntungan Geografis: Geotermal Indonesia",
+    "Visi Global: Menuju SDG7",
+    "Cetak Biru Selesai: Langkah Selanjutnya"
+];
+
+function updateSlide() {
+    const slideImg = document.getElementById('materi-slide');
+    const indicator = document.getElementById('slide-indicator');
+
+    if(slideImg) {
+        // Cukup ganti gambar dan indikator angkanya saja
+        slideImg.src = `assets/materi/${currentSlide}.jpg`; 
+        if(indicator) indicator.innerText = `${currentSlide} / ${totalSlides}`;
+    }
+}
+
+function nextSlide() {
+    playClickSound();
+    if (currentSlide < totalSlides) {
+        currentSlide++;
+        updateSlide();
+    } else {
+        // Jika sudah slide terakhir, tawarkan ke halaman Simulasi
+        if(confirm("Materi selesai! Ingin lanjut ke Simulasi?")) {
+            goToPage('page-sim');
+        }
+    }
+}
+
+function prevSlide() {
+    playClickSound();
+    if (currentSlide > 1) {
+        currentSlide--;
+        updateSlide();
+    } else {
+        // Jika di slide pertama tekan back, kembali ke Tujuan Pembelajaran
+        goToPage('page-objectives');
+    }
+}
+    </script>
+</body>
+</html>
